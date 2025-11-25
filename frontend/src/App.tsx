@@ -46,7 +46,7 @@ const App: React.FC = () => {
             </ProtectedRoute>
           }
         />
-        <Route
+        {/* <Route
           path="/candidates/:id"
           element={
             <ProtectedRoute>
@@ -55,7 +55,7 @@ const App: React.FC = () => {
               </Layout>
             </ProtectedRoute>
           }
-        />
+        /> */}
         <Route
           path="/questions"
           element={

@@ -1,172 +1,4 @@
-// import { Request, Response } from 'express';
-// import pool from '../database/connection';
-// import { InterviewQuestion } from '../types';
-// import { AuthRequest } from '../middleware/auth';
-// import csvParser from 'csv-parser';
-// import xlsx from 'xlsx';
-// import fs from 'fs';
 
-// export const getAllQuestions = async (req: Request, res: Response): Promise<void> => {
-//   try {
-//     const { job_role, difficulty, category } = req.query;
-
-//     let query = 'SELECT * FROM interview_questions WHERE 1=1';
-//     const params: any[] = [];
-//     let paramCount = 1;
-
-//     if (job_role) {
-//       query += ` AND job_role ILIKE $${paramCount}`;
-//       params.push(`%${job_role}%`);
-//       paramCount++;
-//     }
-
-//     if (difficulty) {
-//       query += ` AND difficulty = $${paramCount}`;
-//       params.push(difficulty);
-//       paramCount++;
-//     }
-
-//     if (category) {
-//       query += ` AND category ILIKE $${paramCount}`;
-//       params.push(`%${category}%`);
-//       paramCount++;
-//     }
-
-//     query += ' ORDER BY created_at DESC';
-
-//     const result = await pool.query<InterviewQuestion>(query, params);
-//     res.json({ questions: result.rows });
-//   } catch (error) {
-//     console.error('Error fetching questions:', error);
-//     res.status(500).json({ error: 'Failed to fetch questions' });
-//   }
-// };
-
-// export const createQuestion = async (req: AuthRequest, res: Response): Promise<void> => {
-//   try {
-//     const { job_role, question, category, difficulty, expected_answer } = req.body;
-
-//     const result = await pool.query<InterviewQuestion>(
-//       `INSERT INTO interview_questions (job_role, question, category, difficulty, expected_answer, created_by)
-//        VALUES ($1, $2, $3, $4, $5, $6)
-//        RETURNING *`,
-//       [job_role, question, category, difficulty, expected_answer, req.user?.id]
-//     );
-
-//     res.status(201).json({ question: result.rows[0] });
-//   } catch (error) {
-//     console.error('Error creating question:', error);
-//     res.status(500).json({ error: 'Failed to create question' });
-//   }
-// };
-
-// export const uploadQuestions = async (req: AuthRequest, res: Response): Promise<void> => {
-//   try {
-//     if (!req.file) {
-//       res.status(400).json({ error: 'No file uploaded' });
-//       return;
-//     }
-
-//     const filePath = req.file.path;
-//     const fileExtension = req.file.originalname.split('.').pop()?.toLowerCase();
-//     const questions: any[] = [];
-
-//     if (fileExtension === 'csv') {
-//       // Parse CSV
-//       await new Promise((resolve, reject) => {
-//         fs.createReadStream(filePath)
-//           .pipe(csvParser())
-//           .on('data', (row) => {
-//             questions.push({
-//               job_role: row.job_role || row['Job Role'],
-//               question: row.question || row['Question'],
-//               category: row.category || row['Category'],
-//               difficulty: row.difficulty || row['Difficulty'],
-//               expected_answer: row.expected_answer || row['Expected Answer'],
-//             });
-//           })
-//           .on('end', resolve)
-//           .on('error', reject);
-//       });
-//     } else if (fileExtension === 'xlsx' || fileExtension === 'xls') {
-//       // Parse Excel
-//       const workbook = xlsx.readFile(filePath);
-//       const sheetName = workbook.SheetNames[0];
-//       const worksheet = workbook.Sheets[sheetName];
-//       const jsonData = xlsx.utils.sheet_to_json(worksheet);
-
-//       jsonData.forEach((row: any) => {
-//         questions.push({
-//           job_role: row.job_role || row['Job Role'],
-//           question: row.question || row['Question'],
-//           category: row.category || row['Category'],
-//           difficulty: row.difficulty || row['Difficulty'],
-//           expected_answer: row.expected_answer || row['Expected Answer'],
-//         });
-//       });
-//     } else if (fileExtension === 'json') {
-//       // Parse JSON
-//       const jsonData = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-//       questions.push(...jsonData);
-//     } else {
-//       res.status(400).json({ error: 'Unsupported file format' });
-//       return;
-//     }
-
-//     // Insert questions into database
-//     const insertedQuestions = [];
-//     for (const q of questions) {
-//       if (q.job_role && q.question) {
-//         const result = await pool.query<InterviewQuestion>(
-//           `INSERT INTO interview_questions (job_role, question, category, difficulty, expected_answer, created_by)
-//            VALUES ($1, $2, $3, $4, $5, $6)
-//            RETURNING *`,
-//           [
-//             q.job_role,
-//             q.question,
-//             q.category || null,
-//             q.difficulty || null,
-//             q.expected_answer || null,
-//             req.user?.id,
-//           ]
-//         );
-//         insertedQuestions.push(result.rows[0]);
-//       }
-//     }
-
-//     // Delete uploaded file
-//     fs.unlinkSync(filePath);
-
-//     res.status(201).json({
-//       message: `Successfully uploaded ${insertedQuestions.length} questions`,
-//       questions: insertedQuestions,
-//     });
-//   } catch (error) {
-//     console.error('Error uploading questions:', error);
-//     res.status(500).json({ error: 'Failed to upload questions' });
-//   }
-// };
-
-// export const deleteQuestion = async (req: Request, res: Response): Promise<void> => {
-//   try {
-//     const { id } = req.params;
-
-//     const result = await pool.query(
-//       'DELETE FROM interview_questions WHERE id = $1 RETURNING id',
-//       [id]
-//     );
-
-//     if (result.rows.length === 0) {
-//       res.status(404).json({ error: 'Question not found' });
-//       return;
-//     }
-
-//     res.json({ message: 'Question deleted successfully' });
-//   } catch (error) {
-//     console.error('Error deleting question:', error);
-//     res.status(500).json({ error: 'Failed to delete question' });
-//   }
-// };
 
 
 import { Request, Response } from 'express';
@@ -176,37 +8,55 @@ import { AuthRequest } from '../middleware/auth';
 import csvParser from 'csv-parser';
 import xlsx from 'xlsx';
 import fs from 'fs';
+import { spawn } from 'child_process';
+
+// ---------------------------------------------------------------------------
+// GET EMEBEDDING FOR QUESTIONS
+// ---------------------------------------------------------------------------
+const getEmbedding = (texts: string[]): Promise<number[][]> => {
+  return new Promise((resolve, reject) => {
+    const py = spawn('python', ['embed.py', JSON.stringify(texts)]);
+    let output = '';
+    let error = '';
+
+    py.stdout.on('data', (data) => output += data.toString());
+    py.stderr.on('data', (data) => error += data.toString());
+
+    py.on('close', (code) => {
+      if (code !== 0) return reject(new Error(error));
+      resolve(JSON.parse(output));
+    });
+  });
+};
 
 // ---------------------------------------------------------------------------
 // GET ALL QUESTIONS
 // ---------------------------------------------------------------------------
 export const getAllQuestions = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { job_role, difficulty, category } = req.query;
+    const { position } = req.query;
 
-    let query = `SELECT * FROM interview_questions WHERE 1=1`;
+    let query = `
+              SELECT 
+                id, 
+                position_level AS level,
+                position_name AS position,
+                question_text AS question,
+                updated_date
+              FROM interview_questions 
+              WHERE 1 = 1
+              `;
+
     const params: any[] = [];
-    let index = 1;
+    let idx = 1;
 
-    if (job_role) {
-      query += ` AND job_role ILIKE $${index}`;
-      params.push(`%${job_role}%`);
-      index++;
+    if (position) {
+      query += ` AND position_name ILIKE $${idx}`;
+      params.push(`%${position}%`);
+      idx++;
     }
 
-    if (difficulty) {
-      query += ` AND difficulty = $${index}`;
-      params.push(difficulty);
-      index++;
-    }
-
-    if (category) {
-      query += ` AND category ILIKE $${index}`;
-      params.push(`%${category}%`);
-      index++;
-    }
-
-    query += ` ORDER BY created_at DESC`;
+    query += ' ORDER BY updated_date DESC';
 
     const result = await pool.query<InterviewQuestion>(query, params);
     res.json({ questions: result.rows });
@@ -217,107 +67,83 @@ export const getAllQuestions = async (req: Request, res: Response): Promise<void
   }
 };
 
-// ---------------------------------------------------------------------------
-// CREATE SINGLE QUESTION
-// ---------------------------------------------------------------------------
-export const createQuestion = async (req: AuthRequest, res: Response): Promise<void> => {
+
+export const createQuestion = async (req: AuthRequest, res: Response) => {
   try {
-    const { job_role, question, category, difficulty, expected_answer } = req.body;
+    const { level, position, question } = req.body;
 
-    const createdBy = req.user?.id || null;
+    if (!level || !position || !question) {
+      return res.status(400).json({ error: "Level, position, and question are required" });
+    }
 
-    const result = await pool.query<InterviewQuestion>(
-      `INSERT INTO interview_questions (job_role, question, category, difficulty, expected_answer, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING *`,
-      [job_role, question, category, difficulty, expected_answer, createdBy]
+    const posRes = await pool.query(
+      `SELECT id FROM positions WHERE position=$1 AND level=$2`,
+      [position, level]
     );
 
-    res.status(201).json({ question: result.rows[0] });
-
-  } catch (error) {
-    console.error('Error creating question:', error);
-    res.status(500).json({ error: 'Failed to create question' });
-  }
-};
-
-// ---------------------------------------------------------------------------
-// BULK UPLOAD QUESTIONS
-// ---------------------------------------------------------------------------
-export const uploadQuestions = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    if (!req.file) {
-      res.status(400).json({ error: 'No file uploaded' });
-      return;
+    if (posRes.rows.length === 0) {
+      return res.status(400).json({ error: "Position not found for given level" });
     }
 
-    const filePath = req.file.path;
-    const fileExt = req.file.originalname.split('.').pop()?.toLowerCase();
-    const questions: any[] = [];
+    const positionId = posRes.rows[0].id;
 
-    // --------------------
-    // CSV PARSER
-    // --------------------
-    if (fileExt === 'csv') {
-      await new Promise((resolve, reject) => {
-        fs.createReadStream(filePath)
-          .pipe(csvParser())
-          .on('data', (row) => {
-            questions.push(normalizeRow(row));
-          })
-          .on('end', resolve)
-          .on('error', reject);
-      });
-    
-    // --------------------
-    // EXCEL PARSER
-    // --------------------
-    } else if (fileExt === 'xlsx' || fileExt === 'xls') {
-      const workbook = xlsx.readFile(filePath);
-      const sheet = workbook.SheetNames[0];
-      const rows = xlsx.utils.sheet_to_json(workbook.Sheets[sheet]);
+    const existingQuestion = await pool.query(
+      `SELECT id FROM interview_questions 
+       WHERE position_name=$1 AND position_level=$2`,
+      [position, level]
+    );
 
-      rows.forEach((r: any) => questions.push(normalizeRow(r)));
+    // 3️⃣ Generate embedding untuk position & question
+    const [positionVec, questionVec] = await getEmbedding([position, question]);
 
-    // --------------------
-    // JSON PARSER
-    // --------------------
-    } else if (fileExt === 'json') {
-      const jsonData = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-      jsonData.forEach((r: any) => questions.push(normalizeRow(r)));
-
-    } else {
-      res.status(400).json({ error: 'Unsupported file format' });
-      return;
-    }
-
-    const createdBy = req.user?.id || null;
-    const inserted: InterviewQuestion[] = [];
-
-    for (const q of questions) {
-      if (!q.job_role || !q.question) continue;
-
-      const result = await pool.query<InterviewQuestion>(
-        `INSERT INTO interview_questions (job_role, question, category, difficulty, expected_answer, created_by)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         RETURNING *`,
-        [q.job_role, q.question, q.category, q.difficulty, q.expected_answer, createdBy]
+    // 4️⃣ Jika question sudah ada → UPDATE
+    if (existingQuestion.rows.length > 0) {
+      const updateRes = await pool.query(
+        `UPDATE interview_questions
+         SET question_text=$1,
+             question_vector=$2,
+             position_vector=$3,
+             updated_date=NOW()
+         WHERE id=$4
+         RETURNING id, 
+            position_id,
+            position_level AS level,
+            position_name AS position,
+            position_vector,
+            question_text AS question,
+            question_vector,
+            created_date,
+            updated_date`,
+        [question, questionVec, positionVec, existingQuestion.rows[0].id]
       );
-      inserted.push(result.rows[0]);
+
+      return res.json({ question: updateRes.rows[0] });
     }
 
-    fs.unlinkSync(filePath);
+    const insertRes = await pool.query(
+      `INSERT INTO interview_questions
+       (position_id, position_level, position_name, position_vector, question_text, question_vector, created_date, updated_date)
+       VALUES ($1,$2,$3,$4,$5,$6,NOW(),NOW())
+       RETURNING id, 
+        position_id,
+        position_level AS level,
+        position_name AS position,
+        position_vector,
+        question_text AS question,
+        question_vector,
+        created_date,
+        updated_date`,
+      [positionId, level, position, positionVec, question, questionVec]
+    );
 
-    res.status(201).json({
-      message: `Successfully uploaded ${inserted.length} questions`,
-      questions: inserted
-    });
+    return res.status(201).json({ question: insertRes.rows[0] });
 
-  } catch (error) {
-    console.error('Error uploading questions:', error);
-    res.status(500).json({ error: 'Failed to upload questions' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to create/update question" });
   }
 };
+
 
 // ------------------------------------------------------
 // DELETE QUESTION
@@ -344,15 +170,113 @@ export const deleteQuestion = async (req: Request, res: Response): Promise<void>
   }
 };
 
+
+export const updateQuestion = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { position, level, question } = req.body;
+
+    // Only question required
+    if (!question) {
+      return res.status(400).json({ error: 'Question is required' });
+    }
+
+    // If no position/level → update question only
+    if (!position || !level) {
+      const result = await pool.query(
+        `UPDATE interview_questions
+         SET question_text=$1, updated_date=NOW()
+         WHERE id=$2
+         RETURNING id,
+            position_level AS level,
+            position_name AS position,
+            question_text AS question,
+            created_date,
+            updated_date`,
+        [question, id]
+      );
+
+      if (!result.rows.length)
+        return res.status(404).json({ error: 'Question not found' });
+
+      return res.json({ question: result.rows[0] });
+    }
+
+    // ----- Full update with embedding (for later use) -----
+    let posRes = await pool.query(
+      `SELECT id, position_vector FROM positions WHERE position=$1 AND level=$2`,
+      [position, level]
+    );
+
+    if (posRes.rows.length === 0) {
+      return res.status(400).json({ error: 'Position not found for given level' });
+    }
+
+    let positionId = posRes.rows[0].id;
+    let positionVec = posRes.rows[0].position_vector;
+
+    if (!positionVec || positionVec.length === 0) {
+      [positionVec] = await getEmbedding([position]);
+      await pool.query(
+        `UPDATE positions SET position_vector=$1, update_date=NOW() WHERE id=$2`,
+        [positionVec, positionId]
+      );
+    }
+
+    const [, questionVec] = await getEmbedding([question]);
+
+    const result = await pool.query(
+      `UPDATE interview_questions
+       SET position_id=$1, position_level=$2, position_name=$3, position_vector=$4,
+           question_text=$5, question_vector=$6, updated_date=NOW()
+       WHERE id=$7
+       RETURNING id, 
+          position_id,
+          position_level AS level,
+          position_name AS position,
+          position_vector,
+          question_text AS question,
+          question_vector,
+          created_date,
+          updated_date`,
+      [positionId, level, position, positionVec, question, questionVec, id]
+    );
+
+    if (!result.rows.length)
+      return res.status(404).json({ error: 'Question not found' });
+
+    res.json({ question: result.rows[0] });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update question' });
+  }
+};
+
+
+
+export const getPositionsList = async (req: Request, res: Response) => {
+  try {
+    const result = await pool.query(`
+      SELECT DISTINCT level, position 
+      FROM positions 
+      ORDER BY level, position
+    `);
+
+    res.json(result.rows);  // Frontend expects array
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch positions" });
+  }
+};
+
 // ------------------------------------------------------
 // NORMALIZER FUNCTION
 // ------------------------------------------------------
 function normalizeRow(row: any) {
   return {
-    job_role: row.job_role || row['Job Role'] || row['JOB ROLE'],
-    question: row.question || row['Question'] || row['QUESTION'],
-    category: row.category || row['Category'],
-    difficulty: row.difficulty || row['Difficulty'],
-    expected_answer: row.expected_answer || row['Expected Answer']
+    position: row.position || row['position'] || row['position'],
+    question: row.question || row['Question'] || row['QUESTION']
   };
 }
+

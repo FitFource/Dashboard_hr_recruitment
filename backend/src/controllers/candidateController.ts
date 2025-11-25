@@ -1,313 +1,65 @@
 import { Request, Response } from 'express';
 import pool from '../database/connection';
-import { Candidate, CandidateHistory, CandidateDocument } from '../types';
+import { Candidate} from '../types';
 import { AuthRequest } from '../middleware/auth';
-
-// export const getAllCandidates = async (req: Request, res: Response): Promise<void> => {
-//   try {
-//     const { status, job_role, search, limit = '50', offset = '0' } = req.query;
-
-//     let query = 'SELECT * FROM candidates WHERE 1=1';
-//     const params: any[] = [];
-//     let paramCount = 1;
-
-//     if (status) {
-//       query += ` AND status = $${paramCount}`;
-//       params.push(status);
-//       paramCount++;
-//     }
-
-//     if (job_role) {
-//       query += ` AND job_role ILIKE $${paramCount}`;
-//       params.push(`%${job_role}%`);
-//       paramCount++;
-//     }
-
-//     if (search) {
-//       query += ` AND (full_name ILIKE $${paramCount} OR email ILIKE $${paramCount})`;
-//       params.push(`%${search}%`);
-//       paramCount++;
-//     }
-
-//     query += ` ORDER BY applied_date DESC LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
-//     params.push(limit, offset);
-
-//     const result = await pool.query<Candidate>(query, params);
-
-//     // Get total count
-//     let countQuery = 'SELECT COUNT(*) FROM candidates WHERE 1=1';
-//     const countParams: any[] = [];
-//     let countParamIndex = 1;
-
-//     if (status) {
-//       countQuery += ` AND status = $${countParamIndex}`;
-//       countParams.push(status);
-//       countParamIndex++;
-//     }
-
-//     if (job_role) {
-//       countQuery += ` AND job_role ILIKE $${countParamIndex}`;
-//       countParams.push(`%${job_role}%`);
-//       countParamIndex++;
-//     }
-
-//     if (search) {
-//       countQuery += ` AND (full_name ILIKE $${countParamIndex} OR email ILIKE $${countParamIndex})`;
-//       countParams.push(`%${search}%`);
-//     }
-
-//     const countResult = await pool.query(countQuery, countParams);
-
-//     res.json({
-//       candidates: result.rows,
-//       total: parseInt(countResult.rows[0].count),
-//       limit: parseInt(limit as string),
-//       offset: parseInt(offset as string),
-//     });
-//   } catch (error) {
-//     console.error('Error fetching candidates:', error);
-//     res.status(500).json({ error: 'Failed to fetch candidates' });
-//   }
-// };
-
-// export const getCandidateById = async (req: Request, res: Response): Promise<void> => {
-//   try {
-//     const { id } = req.params;
-
-//     const candidateResult = await pool.query<Candidate>(
-//       'SELECT * FROM candidates WHERE id = $1',
-//       [id]
-//     );
-
-//     if (candidateResult.rows.length === 0) {
-//       res.status(404).json({ error: 'Candidate not found' });
-//       return;
-//     }
-
-//     const historyResult = await pool.query<CandidateHistory>(
-//       `SELECT ch.*, u.full_name as performed_by_name 
-//        FROM candidate_history ch
-//        LEFT JOIN users u ON ch.performed_by = u.id
-//        WHERE ch.candidate_id = $1 
-//        ORDER BY ch.created_at DESC`,
-//       [id]
-//     );
-
-//     const documentsResult = await pool.query<CandidateDocument>(
-//       'SELECT * FROM candidate_documents WHERE candidate_id = $1',
-//       [id]
-//     );
-
-//     res.json({
-//       candidate: candidateResult.rows[0],
-//       history: historyResult.rows,
-//       documents: documentsResult.rows,
-//     });
-//   } catch (error) {
-//     console.error('Error fetching candidate:', error);
-//     res.status(500).json({ error: 'Failed to fetch candidate details' });
-//   }
-// };
-
-// export const createCandidate = async (req: AuthRequest, res: Response): Promise<void> => {
-//   try {
-//     const {
-//       full_name,
-//       email,
-//       phone,
-//       job_role,
-//       status = 'in_progress',
-//       score,
-//       resume_url,
-//       linkedin_url,
-//       years_of_experience,
-//       skills,
-//       education,
-//       location,
-//     } = req.body;
-
-//     const result = await pool.query<Candidate>(
-//       `INSERT INTO candidates (
-//         full_name, email, phone, job_role, status, score, resume_url,
-//         linkedin_url, years_of_experience, skills, education, location
-//       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-//       RETURNING *`,
-//       [
-//         full_name,
-//         email,
-//         phone,
-//         job_role,
-//         status,
-//         score,
-//         resume_url,
-//         linkedin_url,
-//         years_of_experience,
-//         skills,
-//         education,
-//         location,
-//       ]
-//     );
-
-//     const candidate = result.rows[0];
-
-//     // Add history entry
-//     await pool.query(
-//       `INSERT INTO candidate_history (candidate_id, action, description, performed_by, new_status)
-//        VALUES ($1, $2, $3, $4, $5)`,
-//       [
-//         candidate.id,
-//         'Created',
-//         'Candidate profile created',
-//         req.user?.id,
-//         status,
-//       ]
-//     );
-
-//     res.status(201).json({ candidate });
-//   } catch (error: any) {
-//     console.error('Error creating candidate:', error);
-//     if (error.code === '23505') {
-//       res.status(409).json({ error: 'Email already exists' });
-//       return;
-//     }
-//     res.status(500).json({ error: 'Failed to create candidate' });
-//   }
-// };
-
-// export const updateCandidate = async (req: AuthRequest, res: Response): Promise<void> => {
-//   try {
-//     const { id } = req.params;
-//     const updateFields = req.body;
-
-//     // Get current candidate data
-//     const currentResult = await pool.query<Candidate>(
-//       'SELECT * FROM candidates WHERE id = $1',
-//       [id]
-//     );
-
-//     if (currentResult.rows.length === 0) {
-//       res.status(404).json({ error: 'Candidate not found' });
-//       return;
-//     }
-
-//     const currentCandidate = currentResult.rows[0];
-
-//     // Build dynamic update query
-//     const fields = Object.keys(updateFields);
-//     const values = Object.values(updateFields);
-//     const setClause = fields
-//       .map((field, index) => `${field} = $${index + 2}`)
-//       .join(', ');
-
-//     const result = await pool.query<Candidate>(
-//       `UPDATE candidates SET ${setClause} WHERE id = $1 RETURNING *`,
-//       [id, ...values]
-//     );
-
-//     const updatedCandidate = result.rows[0];
-
-//     // Add history entry if status changed
-//     if (updateFields.status && updateFields.status !== currentCandidate.status) {
-//       await pool.query(
-//         `INSERT INTO candidate_history (
-//           candidate_id, action, description, performed_by, 
-//           previous_status, new_status
-//         ) VALUES ($1, $2, $3, $4, $5, $6)`,
-//         [
-//           id,
-//           'Status Updated',
-//           `Status changed from ${currentCandidate.status} to ${updateFields.status}`,
-//           req.user?.id,
-//           currentCandidate.status,
-//           updateFields.status,
-//         ]
-//       );
-//     }
-
-//     res.json({ candidate: updatedCandidate });
-//   } catch (error) {
-//     console.error('Error updating candidate:', error);
-//     res.status(500).json({ error: 'Failed to update candidate' });
-//   }
-// };
-
-// export const deleteCandidate = async (req: Request, res: Response): Promise<void> => {
-//   try {
-//     const { id } = req.params;
-
-//     const result = await pool.query('DELETE FROM candidates WHERE id = $1 RETURNING id', [id]);
-
-//     if (result.rows.length === 0) {
-//       res.status(404).json({ error: 'Candidate not found' });
-//       return;
-//     }
-
-//     res.json({ message: 'Candidate deleted successfully' });
-//   } catch (error) {
-//     console.error('Error deleting candidate:', error);
-//     res.status(500).json({ error: 'Failed to delete candidate' });
-//   }
-// };
-
+import nodemailer from 'nodemailer';
 
 export const getAllCandidates = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { status, job_role, search, limit = '50', offset = '0' } = req.query;
+    const { status, position, search, level,limit = '50', offset = '0' } = req.query;
 
-    let query = `SELECT * FROM Candidate_Profile WHERE 1=1`;
+    let query = `
+              SELECT cp.id,cp.name,ps.level,ps.position,
+                     cp.email,cp.residence,
+                     cp.status AS status_id,
+                     st.status AS status_label,
+                     sc.avg_score AS score, sc.rank,
+                     cp.created_date,cp.updated_date
+              FROM candidate_profile cp
+              INNER JOIN status st 
+                ON cp.status = st.id
+              INNER JOIN positions ps
+                ON cp.position_id = ps.id
+              LEFT JOIN summary_candidate sc
+                ON cp.id = sc.candidate_id
+                AND cp.position_id = sc.position_id
+              WHERE 1=1
+            `;
     const params: any[] = [];
     let paramCount = 1;
 
     if (status) {
-      query += ` AND Status = $${paramCount}`;
+      query += ` AND st.status = $${paramCount}`;
       params.push(status);
       paramCount++;
     }
 
-    if (job_role) {
-      query += ` AND Position ILIKE $${paramCount}`;
-      params.push(`%${job_role}%`);
+    if (position) {
+      query += ` AND ps.position ILIKE $${paramCount}`;
+      params.push(`%${position}%`);
       paramCount++;
     }
 
     if (search) {
-      query += ` AND (Name ILIKE $${paramCount} OR Email ILIKE $${paramCount})`;
+      query += ` AND (cp.name ILIKE $${paramCount} OR cp.email ILIKE $${paramCount})`;
       params.push(`%${search}%`);
       paramCount++;
     }
 
-    query += ` ORDER BY CreatedDate DESC LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
+    if (level) {
+      query += ` AND ps.level = $${paramCount}`;
+      params.push(level);
+      paramCount++;
+    }
+
+    query += ` ORDER BY cp.name ASC LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
     params.push(limit, offset);
 
     const result = await pool.query(query, params);
 
-    // Count total
-    let countQuery = `SELECT COUNT(*) FROM Candidate_Profile WHERE 1=1`;
-    const countParams: any[] = [];
-    let countIndex = 1;
-
-    if (status) {
-      countQuery += ` AND Status = $${countIndex}`;
-      countParams.push(status);
-      countIndex++;
-    }
-
-    if (job_role) {
-      countQuery += ` AND Position ILIKE $${countIndex}`;
-      countParams.push(`%${job_role}%`);
-      countIndex++;
-    }
-
-    if (search) {
-      countQuery += ` AND (Name ILIKE $${countIndex} OR Email ILIKE $${countIndex})`;
-      countParams.push(`%${search}%`);
-    }
-
-    const countResult = await pool.query(countQuery, countParams);
-
     res.json({
       candidates: result.rows,
-      total: parseInt(countResult.rows[0].count),
+      total: result.rows.length,
       limit: parseInt(limit as string),
       offset: parseInt(offset as string),
     });
@@ -318,152 +70,154 @@ export const getAllCandidates = async (req: Request, res: Response): Promise<voi
   }
 };
 
-export const getCandidateById = async (req: Request, res: Response): Promise<void> => {
+
+export const getDistinctPositions = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-
-    const candidateResult = await pool.query(
-      `SELECT * FROM Candidate_Profile WHERE id = $1`,
-      [id]
-    );
-
-    if (candidateResult.rows.length === 0) {
-      res.status(404).json({ error: "Candidate not found" });
-      return;
-    }
-
-    // History & documents optional
-    const historyResult = await pool.query(
-      `SELECT * FROM candidate_history WHERE candidate_id = $1 ORDER BY created_at DESC`,
-      [id]
-    );
-
-    const documentsResult = await pool.query(
-      `SELECT * FROM candidate_documents WHERE candidate_id = $1`,
-      [id]
-    );
-
-    res.json({
-      candidate: candidateResult.rows[0],
-      history: historyResult.rows,
-      documents: documentsResult.rows,
-    });
-
+    const result = await pool.query(`SELECT DISTINCT b.position
+                                      FROM Candidate_Profile a
+                                      INNER JOIN positions b 
+                                        ON a.Position_Id = b.id
+                                      ORDER BY Position`);
+    const positions = result.rows.map(row => row.position); // pastikan sesuai casing di DB
+    res.json({ positions });
   } catch (error) {
-    console.error("Error fetching candidate:", error);
-    res.status(500).json({ error: "Failed to fetch candidate details" });
-  }
-};
-
-export const createCandidate = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const {
-      Name,
-      Email,
-      Phone,
-      Position,
-      Gender,
-      Summary_Profile,
-      Education,
-      Working_exp,
-      Organization_exp,
-      Portfolio,
-      Hard_skill,
-      Soft_skill,
-      AI_reason,
-      CV_link,
-      Status = 'in_progress',
-      Source,
-      Residence,
-      BirthDate
-    } = req.body;
-
-    const result = await pool.query(
-      `INSERT INTO Candidate_Profile (
-        Name, Email, Phone, Position, Gender, Summary_Profile, Education,
-        Working_exp, Organization_exp, Portfolio, Hard_skill, Soft_skill,
-        AI_reason, CV_link, Status, Source, Residence, BirthDate
-      ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18
-      )
-      RETURNING *`,
-      [
-        Name, Email, Phone, Position, Gender, Summary_Profile, Education,
-        Working_exp, Organization_exp, Portfolio, Hard_skill, Soft_skill,
-        AI_reason, CV_link, Status, Source, Residence, BirthDate
-      ]
-    );
-
-    res.status(201).json({
-      candidate: result.rows[0]
-    });
-
-  } catch (error: any) {
-    console.error("Error creating candidate:", error);
-
-    if (error.code === "23505") {
-      res.status(409).json({ error: "Email already exists" });
-      return;
-    }
-
-    res.status(500).json({ error: "Failed to create candidate" });
+    console.error("Error fetching distinct positions:", error);
+    res.status(500).json({ error: "Failed to fetch positions" });
   }
 };
 
 
-export const updateCandidate = async (req: AuthRequest, res: Response): Promise<void> => {
+const sendRejectionEmail = async (
+  email: string,
+  name: string,
+  level: string,
+  position: string
+) => {
+  // Validate SMTP configuration
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    throw new Error('SMTP configuration is missing. Please check your .env file.');
+  }
+  
+  console.log("ENV:", process.env.SMTP_HOST, process.env.SMTP_USER);
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+
+  // Verify SMTP connection
   try {
-    const { id } = req.params;
-    const updateFields = req.body;
-
-    const current = await pool.query(
-      `SELECT * FROM Candidate_Profile WHERE id = $1`,
-      [id]
-    );
-
-    if (current.rows.length === 0) {
-      res.status(404).json({ error: "Candidate not found" });
-      return;
-    }
-
-    const fields = Object.keys(updateFields);
-    const values = Object.values(updateFields);
-    const setClause = fields
-      .map((field, index) => `${field} = $${index + 2}`)
-      .join(', ');
-
-    const result = await pool.query(
-      `UPDATE Candidate_Profile SET ${setClause} WHERE id = $1 RETURNING *`,
-      [id, ...values]
-    );
-
-    res.json({ candidate: result.rows[0] });
-
+    await transporter.verify();
   } catch (error) {
-    console.error("Error updating candidate:", error);
-    res.status(500).json({ error: "Failed to update candidate" });
+    console.error('SMTP connection failed:', error);
+    throw new Error('Failed to connect to email server. Please check SMTP credentials.');
   }
+
+  const mailOptions = {
+    from: `"HR Team" <${process.env.SMTP_USER}>`,
+    to: email,
+    subject: `Application Status Update – ${position} (${level})`,
+    html: `
+      <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.5;">
+        <p>Dear <strong>${name}</strong>,</p>
+        <p>Thank you for your interest in the <strong>${level} ${position}</strong> position at our company.</p>
+        <p>After careful consideration, we regret to inform you that your application for the <strong> ${level} ${position} </strong> role has not been successful at this time.</p>
+        <p>We truly appreciate the time and effort you put into your application, and we encourage you to apply for other opportunities that match your skills in the future.</p>
+        <p>Wishing you success in your career.</p>
+        <p>Best regards,<br/>
+        <strong>HR Team</strong></p>
+      </div>
+    `,
+  };
+
+  await transporter.sendMail(mailOptions);
 };
 
 
-export const deleteCandidate = async (req: Request, res: Response): Promise<void> => {
+export const updateCandidateStatus = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+    const { newStatus } = req.body; // expected integer 2 | 3
+    const newStatusNum = Number(newStatus);
 
+    // Get current candidate info
     const result = await pool.query(
-      `DELETE FROM Candidate_Profile WHERE id = $1 RETURNING id`,
+      `SELECT cp.status, cp.email, cp.name, ps.level, ps.position
+       FROM candidate_profile cp
+       INNER JOIN positions ps ON cp.position_id = ps.id
+       WHERE cp.id = $1`,
       [id]
     );
 
     if (result.rows.length === 0) {
-      res.status(404).json({ error: "Candidate not found" });
-      return;
+      return res.status(404).json({ error: "Candidate not found" });
     }
 
-    res.json({ message: "Candidate deleted successfully" });
+    const candidate = result.rows[0];
+
+    // Only allow status change if current status is 1 (In Progress/Open)
+    if (Number(candidate.status) !== 1) {
+      return res.status(400).json({ error: "Can only update 'In Progress' candidates" });
+    }
+
+    // Validate new status
+    if (![2, 3].includes(newStatusNum)) {
+      return res.status(400).json({ error: "Invalid status. Must be 2 (Accepted) or 3 (Rejected)" });
+    }
+
+    // Update status
+    const updateResult = await pool.query(
+      `UPDATE candidate_profile
+       SET status = $1, updated_date = NOW()
+       WHERE id = $2
+       RETURNING id, status`,
+      [newStatusNum, id]
+    );
+
+    // Send rejection email if status is Rejected
+    if (newStatusNum === 3) {
+      try {
+        await sendRejectionEmail(
+          candidate.email, 
+          candidate.name, 
+          candidate.level, 
+          candidate.position
+        );
+        console.log(`✅ Rejection email sent successfully to ${candidate.email}`);
+      } catch (emailError: any) {
+        console.error('❌ Failed to send rejection email:', emailError.message);
+        console.error('Full error:', emailError);
+        
+        // Log specific error for SMTP authentication issues
+        if (emailError.code === 'EAUTH') {
+          console.error('');
+          console.error('⚠️  SMTP Authentication Failed!');
+          console.error('Please check:');
+          console.error('1. SMTP_USER and SMTP_PASS are set in .env file');
+          console.error('2. If using Gmail, you need to use App Password (not regular password)');
+          console.error('3. See GMAIL_SMTP_SETUP.md for detailed setup instructions');
+          console.error('');
+        }
+        
+        // Don't fail the request if email fails - status update should still succeed
+      }
+    }
+
+
+    res.json({
+      candidate: updateResult.rows[0],
+      message: "Candidate status updated successfully"
+    });
 
   } catch (error) {
-    console.error("Error deleting candidate:", error);
-    res.status(500).json({ error: "Failed to delete candidate" });
+    console.error("Error updating candidate status:", error);
+    res.status(500).json({ error: "Failed to update candidate status" });
   }
 };
+
+
+

@@ -6,16 +6,16 @@ import { User } from '../types';
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password, full_name, role = 'viewer' } = req.body;
+    const { email, password, name, role = 'viewer' } = req.body;
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const result = await pool.query<User>(
-      `INSERT INTO users (email, password, full_name, role) 
+      `INSERT INTO users (email, password, name, role) 
        VALUES ($1, $2, $3, $4) 
-       RETURNING id, email, full_name, role, created_at`,
-      [email, hashedPassword, full_name, role]
+       RETURNING id, email, name, role, created_date`,
+      [email, hashedPassword, name, role]
     );
 
     const user = result.rows[0];
@@ -25,7 +25,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       user: {
         id: user.id,
         email: user.email,
-        full_name: user.full_name,
+        name: user.name,
         role: user.role,
       },
     });
@@ -72,7 +72,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       user: {
         id: user.id,
         email: user.email,
-        full_name: user.full_name,
+        name: user.name,
         role: user.role,
       },
     });
@@ -86,7 +86,7 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
     const userId = (req as any).user.id;
 
     const result = await pool.query<User>(
-      'SELECT id, email, full_name, role, created_at FROM users WHERE id = $1',
+      'SELECT id, email, name, role, created_date FROM users WHERE id = $1',
       [userId]
     );
 

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
-import { Candidate, CandidateHistory, CandidateDocument } from '../types';
+import { Candidate } from '../types';
 import { useAuthStore } from '../store/authStore';
 import { format } from 'date-fns';
 
@@ -23,8 +23,8 @@ const CandidateDetail: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const [candidate, setCandidate] = useState<Candidate | null>(null);
-  const [history, setHistory] = useState<CandidateHistory[]>([]);
-  const [documents, setDocuments] = useState<CandidateDocument[]>([]);
+  // const [history, setHistory] = useState<CandidateHistory[]>([]);
+  // const [documents, setDocuments] = useState<CandidateDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -99,7 +99,7 @@ const CandidateDetail: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mint-600"></div>
       </div>
     );
   }
@@ -114,11 +114,11 @@ const CandidateDetail: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'accepted':
+      case 'Accepted':
         return 'bg-green-100 text-green-800';
-      case 'rejected':
+      case 'Rejected':
         return 'bg-red-100 text-red-800';
-      case 'in_progress':
+      case 'In Progress':
         return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -140,7 +140,7 @@ const CandidateDetail: React.FC = () => {
           <div className="flex gap-2">
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-mint-500 to-mint-400 text-white rounded-2xl hover:from-mint-600 hover:to-mint-500 font-bold shadow-md hover:scale-[1.02] transition-all"
             >
               <Edit size={20} />
               {isEditing ? 'Cancel' : 'Edit'}
@@ -148,7 +148,7 @@ const CandidateDetail: React.FC = () => {
             {user?.role === 'admin' && (
               <button
                 onClick={handleDelete}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-2xl hover:bg-red-700 font-bold shadow-md hover:scale-[1.02] transition-all"
               >
                 <Trash2 size={20} />
                 Delete
@@ -212,7 +212,7 @@ const CandidateDetail: React.FC = () => {
               {candidate.skills.map((skill, index) => (
                 <span
                   key={index}
-                  className="px-3 py-1 bg-purple-50 text-purple-700 text-sm rounded-full"
+                  className="px-3 py-1 bg-mint-100 text-mint-800 text-sm rounded-full font-semibold shadow-sm"
                 >
                   {skill}
                 </span>
@@ -231,11 +231,11 @@ const CandidateDetail: React.FC = () => {
                 <select
                   value={editForm.status}
                   onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-mint-500"
                 >
-                  <option value="in_progress">In Progress</option>
-                  <option value="accepted">Accepted</option>
-                  <option value="rejected">Rejected</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Accepted">Accepted</option>
+                  <option value="Rejected">Rejected</option>
                 </select>
               </div>
               <div>
@@ -246,14 +246,14 @@ const CandidateDetail: React.FC = () => {
                   max="100"
                   value={editForm.score}
                   onChange={(e) => setEditForm({ ...editForm, score: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-mint-500"
                   placeholder="0-100"
                 />
               </div>
             </div>
             <button
               onClick={handleUpdate}
-              className="mt-4 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+              className="mt-4 px-6 py-2 bg-gradient-to-r from-mint-500 to-mint-400 text-white rounded-2xl hover:from-mint-600 hover:to-mint-500 font-bold shadow-md hover:scale-[1.02] transition-all"
             >
               Save Changes
             </button>
@@ -267,7 +267,7 @@ const CandidateDetail: React.FC = () => {
         {history.length > 0 ? (
           <div className="space-y-4">
             {history.map((item) => (
-              <div key={item.id} className="flex gap-4 border-l-2 border-primary-500 pl-4">
+              <div key={item.id} className="flex gap-4 border-l-2 border-mint-500 pl-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-gray-900">{item.action}</span>
@@ -311,7 +311,7 @@ const CandidateDetail: React.FC = () => {
                   href={doc.file_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-purple-600 hover:text-purple-700"
+                  className="text-mint-600 hover:text-mint-700 font-semibold"
                 >
                   Download
                 </a>

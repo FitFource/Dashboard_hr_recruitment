@@ -7,6 +7,9 @@
   },
   "dependencies": {
     "concurrently": "^9.2.1",
-    "jsonwebtoken": "^8.5.1"
+    "jsonwebtoken": "^8.5.1",
+    "nodemailer": "^7.0.10",
+    "sweetalert2": "^11.26.3",
+    "sweetalert2-react-content": "^5.1.0"
   }
 }

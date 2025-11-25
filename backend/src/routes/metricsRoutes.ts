@@ -4,6 +4,7 @@ import {
   getTopCandidatesToday,
   getCandidatesByRole,
   getApplicationTrends,
+  getLevels,
 } from '../controllers/metricsController';
 import { authenticateToken } from '../middleware/auth';
 
@@ -53,4 +54,7 @@ router.get('/top-by-role', authenticateToken, getCandidatesByRole);
  */
 router.get('/trends', authenticateToken, getApplicationTrends);
 
+router.get('/levels', authenticateToken, getLevels);
+
 export default router;
+

@@ -2,108 +2,23 @@ import { Request, Response } from 'express';
 import pool from '../database/connection';
 import { MetricsOverview, TopCandidate, CandidatesByRole } from '../types';
 
-// export const getOverviewMetrics = async (req: Request, res: Response): Promise<void> => {
-//   try {
-//     const result = await pool.query<MetricsOverview>(`
-//       SELECT 
-//         COUNT(*) as total_candidates,
-//         COUNT(*) FILTER (WHERE status = 'accepted') as accepted_candidates,
-//         COUNT(*) FILTER (WHERE status = 'rejected') as rejected_candidates,
-//         COUNT(*) FILTER (WHERE status = 'in_progress') as in_progress_candidates
-//       FROM candidates
-//     `);
-
-//     res.json(result.rows[0]);
-//   } catch (error) {
-//     console.error('Error fetching overview metrics:', error);
-//     res.status(500).json({ error: 'Failed to fetch metrics' });
-//   }
-// };
-
-// export const getTopCandidatesToday = async (req: Request, res: Response): Promise<void> => {
-//   try {
-//     const result = await pool.query<TopCandidate>(`
-//       SELECT 
-//         c.id,
-//         c.full_name,
-//         c.email,
-//         c.job_role,
-//         c.status,
-//         c.score,
-//         COUNT(ch.id) as actions_count,
-//         MAX(ch.created_at) as last_action_date
-//       FROM candidates c
-//       LEFT JOIN candidate_history ch ON c.id = ch.candidate_id
-//       WHERE DATE(ch.created_at) = CURRENT_DATE
-//       GROUP BY c.id, c.full_name, c.email, c.job_role, c.status, c.score
-//       ORDER BY actions_count DESC, last_action_date DESC
-//       LIMIT 10
-//     `);
-
-//     res.json(result.rows);
-//   } catch (error) {
-//     console.error('Error fetching top candidates:', error);
-//     res.status(500).json({ error: 'Failed to fetch top candidates' });
-//   }
-// };
-
-// export const getCandidatesByRole = async (req: Request, res: Response): Promise<void> => {
-//   try {
-//     const result = await pool.query<CandidatesByRole>(`
-//       SELECT 
-//         job_role,
-//         COUNT(*) as total_candidates,
-//         COUNT(*) FILTER (WHERE status = 'accepted') as accepted,
-//         COUNT(*) FILTER (WHERE status = 'rejected') as rejected,
-//         COUNT(*) FILTER (WHERE status = 'in_progress') as in_progress
-//       FROM candidates
-//       GROUP BY job_role
-//       ORDER BY total_candidates DESC
-//       LIMIT 10
-//     `);
-
-//     res.json(result.rows);
-//   } catch (error) {
-//     console.error('Error fetching candidates by role:', error);
-//     res.status(500).json({ error: 'Failed to fetch candidates by role' });
-//   }
-// };
-
-// export const getApplicationTrends = async (req: Request, res: Response): Promise<void> => {
-//   try {
-//     const { days = '30' } = req.query;
-
-//     const result = await pool.query(`
-//       SELECT 
-//         DATE(applied_date) as date,
-//         COUNT(*) as total_applications,
-//         COUNT(*) FILTER (WHERE status = 'accepted') as accepted,
-//         COUNT(*) FILTER (WHERE status = 'rejected') as rejected,
-//         COUNT(*) FILTER (WHERE status = 'in_progress') as in_progress
-//       FROM candidates
-//       WHERE applied_date >= CURRENT_DATE - INTERVAL '${parseInt(days as string)} days'
-//       GROUP BY DATE(applied_date)
-//       ORDER BY date DESC
-//     `);
-
-//     res.json(result.rows);
-//   } catch (error) {
-//     console.error('Error fetching application trends:', error);
-//     res.status(500).json({ error: 'Failed to fetch application trends' });
-//   }
-// };
-
-
 export const getOverviewMetrics = async (req: Request, res: Response): Promise<void> => {
   try {
+    const { job_role, level, start_date, end_date } = req.query;
+
     const result = await pool.query(`
       SELECT 
         COUNT(*) AS total_candidates,
-        COUNT(*) FILTER (WHERE Status = 'accepted') AS accepted_candidates,
-        COUNT(*) FILTER (WHERE Status = 'rejected') AS rejected_candidates,
-        COUNT(*) FILTER (WHERE Status = 'in_progress') AS in_progress_candidates
-      FROM Candidate_Profile
-    `);
+        COUNT(*) FILTER (WHERE a.status = 2) AS accepted_candidates,
+        COUNT(*) FILTER (WHERE a.status = 3) AS rejected_candidates,
+        COUNT(*) FILTER (WHERE a.status = 1) AS in_progress_candidates
+      FROM candidate_profile a
+      INNER JOIN positions p ON a.position_id = p.id
+      WHERE ($1::text IS NULL OR p.position = $1)
+        AND ($2::text IS NULL OR p.level = $2)
+        AND ($3::date IS NULL OR a.submit_date >= $3)
+        AND ($4::date IS NULL OR a.submit_date <= $4)
+    `, [job_role || null, level || null, start_date || null, end_date || null]);
 
     res.json(result.rows[0]);
   } catch (error) {
@@ -112,76 +27,75 @@ export const getOverviewMetrics = async (req: Request, res: Response): Promise<v
   }
 };
 
-// export const getTopCandidatesToday = async (req: Request, res: Response): Promise<void> => {
-//   try {
-//     const result = await pool.query(`
-//       SELECT 
-//         c.id,
-//         c.Name AS full_name,
-//         c.Email,
-//         c.Position AS job_role,
-//         c.Status,
-//         COUNT(ch.id) AS actions_count,
-//         MAX(ch.created_at) AS last_action_date
-//       FROM Candidate_Profile c
-//       LEFT JOIN candidate_history ch ON c.id = ch.candidate_id
-//       WHERE DATE(ch.created_at) = CURRENT_DATE
-//       GROUP BY c.id, c.Name, c.Email, c.Position, c.Status
-//       ORDER BY actions_count DESC, last_action_date DESC
-//       LIMIT 10
-//     `);
-
-//     res.json(result.rows);
-//   } catch (error) {
-//     console.error("Error fetching top candidates:", error);
-//     res.status(500).json({ error: "Failed to fetch top candidates" });
-//   }
-// };
 
 export const getTopCandidatesToday = async (req: Request, res: Response) => {
   try {
-    const { job_role, topN } = req.query;
-
-    // default topN = 1 jika tidak diberikan
-    const limit = topN ? parseInt(topN as string) : 1;
+    const { job_role, level, topN, start_date, end_date } = req.query;
+    const limit = topN ? parseInt(topN as string) : 10;
 
     const result = await pool.query(
       `
-      SELECT *
-      FROM (
-          SELECT *,
-                 ROW_NUMBER() OVER (PARTITION BY "position" ORDER BY "rank" ASC) AS rn
-          FROM "summary_candidate"
-          WHERE ($1::text IS NULL OR "position" = $1)
-            AND DATE("updateddate") = CURRENT_DATE
-      ) sub
-      WHERE rn <= $2
-      ORDER BY "position", "rank"
+      SELECT
+            cp.id,
+            cp.name,
+            cp.email,
+            p.level,
+            p.position AS job_role,
+            s.status,
+            cp.avg_score AS score,
+            cp.rank,
+            c.submit_date,
+            cp.updated_date AS last_action_date
+      FROM summary_candidate cp
+      INNER JOIN candidate_profile c
+        ON cp.candidate_id = c.id
+        AND cp.position_id = c.position_id
+      INNER JOIN positions p
+        ON cp.position_id = p.id
+      INNER JOIN status s
+        ON c.status = s.id
+      WHERE c.status = 1
+        AND ($1::text IS NULL OR p.position = $1)
+        AND ($2::text IS NULL OR p.level = $2)
+        AND ($3::date IS NULL OR c.submit_date >= $3)
+        AND ($4::date IS NULL OR c.submit_date <= $4)
+      ORDER BY cp.rank ASC
+      LIMIT $5
       `,
-      [job_role || null, limit]
+      [job_role || null, level || null, start_date || null, end_date || null, limit]
     );
 
-    res.json({ topCandidates: result.rows });
+    res.json(result.rows);
   } catch (error) {
     console.error('Error fetching top candidates:', error);
     res.status(500).json({ error: 'Failed to fetch top candidates' });
   }
 };
 
+
+
 export const getCandidatesByRole = async (req: Request, res: Response): Promise<void> => {
   try {
+    const { job_role, start_date, end_date, level } = req.query;
     const result = await pool.query(`
       SELECT 
-        Position AS job_role,
+        p.position AS job_role,
         COUNT(*) AS total_candidates,
-        COUNT(*) FILTER (WHERE Status = 'accepted') AS accepted,
-        COUNT(*) FILTER (WHERE Status = 'rejected') AS rejected,
-        COUNT(*) FILTER (WHERE Status = 'in_progress') AS in_progress
-      FROM Candidate_Profile
-      GROUP BY Position
+        COUNT(*) FILTER (WHERE a.status = 2) AS accepted,
+        COUNT(*) FILTER (WHERE a.status = 3) AS rejected,
+        COUNT(*) FILTER (WHERE a.Status = 1) AS in_progress
+      FROM candidate_profile a
+      INNER JOIN positions p
+        ON a.position_id = p.id
+      WHERE ($1::text IS NULL OR p.position = $1)
+        AND ($2::date IS NULL OR a.submit_date >= $2)
+        AND ($3::date IS NULL OR a.submit_date <= $3)
+        AND ($4::text IS NULL OR p.level = $4)
+      GROUP BY p.position
       ORDER BY total_candidates DESC
-      LIMIT 10
-    `);
+    `,
+      [job_role || null,start_date || null,end_date || null,level || null
+      ]);
 
     res.json(result.rows);
   } catch (error) {
@@ -192,24 +106,40 @@ export const getCandidatesByRole = async (req: Request, res: Response): Promise<
 
 export const getApplicationTrends = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { days = "30" } = req.query;
+    const { job_role, level, start_date, end_date ,days = "30" } = req.query;
 
     const result = await pool.query(`
       SELECT 
-        DATE(CreatedDate) AS date,
+        DATE(a.submit_date) AS date,
         COUNT(*) AS total_applications,
-        COUNT(*) FILTER (WHERE Status = 'accepted') AS accepted,
-        COUNT(*) FILTER (WHERE Status = 'rejected') AS rejected,
-        COUNT(*) FILTER (WHERE Status = 'in_progress') AS in_progress
-      FROM Candidate_Profile
-      WHERE CreatedDate >= CURRENT_DATE - INTERVAL '${parseInt(days as string)} days'
-      GROUP BY DATE(CreatedDate)
+        COUNT(*) FILTER (WHERE a.status = 2) AS accepted,
+        COUNT(*) FILTER (WHERE a.status = 3) AS rejected,
+        COUNT(*) FILTER (WHERE a.status = 1) AS in_progress
+      FROM candidate_profile a
+      INNER JOIN positions p ON a.position_id = p.id
+      WHERE 
+        -- gunakan start/end date jika ada, kalau tidak pakai interval default
+        (COALESCE($1::date, a.submit_date) <= a.submit_date AND COALESCE($2::date, a.submit_date) >= a.submit_date)
+        AND ($3::text IS NULL OR p.position = $3)
+        AND ($4::text IS NULL OR p.level = $4)
+        AND (COALESCE($1::date, CURRENT_DATE - INTERVAL '${parseInt(days as string)} days') <= a.submit_date)
+      GROUP BY DATE(a.submit_date)
       ORDER BY date DESC
-    `);
+    `, [start_date || null, end_date || null, job_role || null, level || null]);
 
     res.json(result.rows);
   } catch (error) {
     console.error("Error fetching application trends:", error);
     res.status(500).json({ error: "Failed to fetch application trends" });
+  }
+};
+
+export const getLevels = async (req: Request, res: Response) => {
+  try {
+    const result = await pool.query(`SELECT DISTINCT level FROM positions ORDER BY level`);
+    res.json({ levels: result.rows.map(r => r.level) });
+  } catch (error) {
+    console.error("Error fetching levels:", error);
+    res.status(500).json({ error: "Failed to fetch levels" });
   }
 };

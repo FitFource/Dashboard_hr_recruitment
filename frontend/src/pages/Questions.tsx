@@ -4,18 +4,36 @@ import api from '../lib/api';
 import toast from 'react-hot-toast';
 import { InterviewQuestion } from '../types';
 import { useAuthStore } from '../store/authStore';
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
+
+const MySwal = withReactContent(Swal);
+
 
 const Questions: React.FC = () => {
   const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showUpload, setShowUpload] = useState(false);
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
   const { user } = useAuthStore();
+  const [roleFilter, setRoleFilter] = useState('');
+  const [levels, setLevels] = useState<string[]>([]);
+  const [positions, setPositions] = useState<string[]>([]);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [levelFilter, setLevelFilter] = useState('');
+
+  const [form, setForm] = useState({
+    level: "",
+    position_text: "",
+    question_text: "",
+  });
+
+
 
   useEffect(() => {
     fetchQuestions();
+    fetchPositions();
     
-    // Auto-refresh every 30 seconds (silent refresh)
     const interval = setInterval(() => {
       fetchQuestions(true);
     }, 30000);
@@ -34,126 +52,288 @@ const Questions: React.FC = () => {
         console.error('Error:', error);
       }
     } finally {
-      if (!silent) setLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleUpload = async () => {
-    if (!uploadFile) {
-      toast.error('Please select a file');
+  const fetchPositions = async () => {
+    try {
+      const res = await api.get('/questions/positions');
+
+      let uniqueLevels: string[] = [];
+      let uniquePositions: string[] = [];
+
+      if (Array.isArray(res.data)) {
+        uniqueLevels = Array.from(new Set(res.data.map((p: any) => p.level)));
+        uniquePositions = Array.from(new Set(res.data.map((p: any) => p.position)));
+      }
+      else if (res.data.level && res.data.position) {
+        uniqueLevels = Array.from(new Set(res.data.level));
+        uniquePositions = Array.from(new Set(res.data.position));
+      }
+
+      setLevels(uniqueLevels);
+      setPositions(uniquePositions);
+
+    } catch (err) {
+      console.error('Failed to fetch levels/positions', err);
+      toast.error('Failed to fetch levels/positions');
+    }
+  };
+
+  const handleSave = async () => {
+    const { level, position_text, question_text } = form;
+    if (!level || !position_text || !question_text) {
+      toast.error("All fields are required");
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', uploadFile);
+    setUploading(true);
+    setLoading(true);
 
     try {
-      const response = await api.post('/questions/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      toast.success(response.data.message);
-      setShowUpload(false);
-      setUploadFile(null);
-      fetchQuestions();
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to upload questions');
-      console.error('Error:', error);
+    
+      if (editingId) {
+        // Update
+        const res = await api.put(`/questions/${editingId}`, {
+          level,
+          position: position_text,
+          question: question_text
+        });
+        setQuestions(prev =>
+          prev.map(q => q.id === editingId ? res.data.question : q)
+        );
+        toast.success("Question updated");
+      } else {
+        // Add new
+        const res = await api.post(`/questions`, {
+          level,
+          position: position_text,
+          question: question_text
+        });
+        setQuestions(prev => {
+          const exist = prev.find(q => q.id === res.data.question.id);
+          if (exist) {
+            return prev.map(q => q.id === res.data.question.id ? res.data.question : q);
+          }
+          return [...prev, res.data.question];
+        });
+
+        setShowForm(false);
+        setEditingId(null);
+        setForm({ level: "", position_text: "", question_text: "" });
+        toast.success("Question added");
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.error || "Failed to save question");
+    }finally {
+      setUploading(false);
+      setLoading(false);
+      await fetchQuestions();
     }
   };
 
+
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this question?')) return;
+    const result = await MySwal.fire({
+      title: `Are you sure?`,
+      text: `Do you really want to DELETE this question?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Delete",
+      cancelButtonText: "Cancel",
+      reverseButtons: true,
+      focusCancel: true,
+      customClass: {
+        popup: "rounded-lg",
+      },
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await api.delete(`/questions/${id}`);
-      toast.success('Question deleted successfully');
-      fetchQuestions();
+      toast.success("Question deleted successfully");
+      setQuestions(prev => prev.filter(q => q.id !== id));
     } catch (error: any) {
-      toast.error('Failed to delete question');
-      console.error('Error:', error);
+      toast.error("Failed to delete question");
+      console.error("Error:", error);
     }
   };
 
-  const getDifficultyColor = (difficulty?: string) => {
-    switch (difficulty) {
-      case 'easy':
-        return 'bg-green-100 text-green-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'hard':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+
+  const handleEdit = async (id: number) => {
+    const q = questions.find(q => q.id === id);
+    if (!q) return;
+
+    const result = await MySwal.fire({
+      title: "Edit Question",
+      html: `
+        <div class="flex flex-col gap-3 text-left">
+          <label class="text-sm font-semibold">Question</label>
+          <textarea id="edit-question" class="swal2-textarea" rows="4">${q.question}</textarea>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: "Save",
+      cancelButtonText: "Cancel",
+      focusConfirm: false,
+      customClass: {
+        popup: "rounded-lg",
+      },
+      preConfirm: () => {
+        const question = (document.getElementById("edit-question") as HTMLTextAreaElement).value;
+
+        if (!question) {
+          Swal.showValidationMessage("All fields are required!");
+          return false;
+        }
+
+        return { question };
+      }
+    });
+
+    if (!result.isConfirmed) return;
+
+    const { question } = result.value;
+
+    try {
+      const res = await api.put(`/questions/${id}`, {question});
+      setQuestions(prev =>
+        prev.map(x => x.id === id ? res.data.question : x)
+      );
+
+      toast.success("Question updated");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update question");
     }
   };
+
+
+  const uniqueRoles = Array.from(new Set(questions.map(q => q.position)));
+  const filteredQuestions = questions.filter(q =>
+    (roleFilter ? q.position === roleFilter : true) &&
+    (levelFilter ? q.level === levelFilter : true)
+  );
+
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Interview Questions</h2>
-          <p className="text-gray-600 mt-1">Manage interview questions for different roles</p>
+          <h2 className="text-2xl font-bold text-dark-300 tracking-tight">Interview Questions</h2>
+          <p className="text-dark-300/60 mt-1">You can manage interview questions for different roles</p>
         </div>
-        {user?.role === 'admin' && (
-          <button
-            onClick={() => setShowUpload(!showUpload)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-          >
-            <Upload size={20} />
-            Upload Questions
-          </button>
-        )}
+
+      
+        <div className="flex items-center gap-4 justify-end">
+          <div className="flex items-center gap-2">
+            <select
+              value={levelFilter}
+              onChange={e => setLevelFilter(e.target.value)}
+              className="px-3 py-1 border rounded w-40"
+            >
+              <option value="">All Levels</option>
+              {levels.map(lvl => (
+                <option key={lvl} value={lvl}>{lvl}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={roleFilter}
+              onChange={e => setRoleFilter(e.target.value)}
+              className="px-3 py-1 border rounded w-48" // w-48 = panjang dropdown
+            >
+              <option value="">All Roles</option>
+              {uniqueRoles.map(role => (
+                <option key={role} value={role}>{role}</option>
+              ))}
+            </select>
+          </div>
+
+          {user?.role === 'admin' && (
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#B5D8BF]/50 text-dark-300 rounded-2xl hover:bg-[#B5D8BF]/70 transition-all shadow-sm hover:shadow-md hover:scale-[1.02]"
+            >
+              <Upload size={20} />
+              Add Question
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Upload Section */}
-      {showUpload && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload Questions</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Upload a CSV, Excel, or JSON file with interview questions. Required fields: job_role, question
-          </p>
-          
-          <div className="mb-4">
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <FileText className="mx-auto text-gray-400 mb-2" size={48} />
-              <label className="cursor-pointer">
-                <span className="text-primary-600 hover:text-primary-700 font-medium">
-                  Choose a file
-                </span>
-                <input
-                  type="file"
-                  accept=".csv,.xlsx,.xls,.json"
-                  onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                  className="hidden"
-                />
-              </label>
-              <p className="text-sm text-gray-500 mt-1">CSV, Excel, or JSON (max 10MB)</p>
-              {uploadFile && (
-                <p className="text-sm text-gray-900 mt-2">Selected: {uploadFile.name}</p>
-              )}
+
+      {/* Form Section */}
+      {showForm && (
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <h3 className="text-lg font-semibold mb-4">
+            {editingId ? "Edit Question" : "Add New Question"}
+          </h3>
+
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label className="text-sm font-medium text-gray-700">Level</label>
+              <select
+                value={form.level}
+                onChange={e => setForm({ ...form, level: e.target.value })}
+                className="w-full mt-1 border rounded-lg px-3 py-2"
+              >
+                <option value="">Select Level</option>
+                {levels.map(lvl => <option key={lvl} value={lvl}>{lvl}</option>)}
+              </select>
+            </div>
+
+            <div className="flex-1">
+              <label className="text-sm font-medium text-gray-700">Job Role</label>
+              <select
+                value={form.position_text}
+                onChange={e => setForm({ ...form, position_text: e.target.value })}
+                className="w-full mt-1 border rounded-lg px-3 py-2"
+              >
+                <option value="">Select Job Role</option>
+                {positions.map(pos => <option key={pos} value={pos}>{pos}</option>)}
+              </select>
             </div>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-            <h4 className="font-medium text-blue-900 mb-2">File Format Example (CSV):</h4>
-            <pre className="text-xs text-blue-800 overflow-x-auto">
-{`job_role,question,category,difficulty,expected_answer
-Software Engineer,What is closure in JavaScript?,Technical,medium,A closure is...
-Product Manager,How do you prioritize features?,Strategy,medium,I use...`}
-            </pre>
+
+          {/* Question Text */}
+          <div className="mt-4">
+            <label className="text-sm font-medium text-gray-700">Question</label>
+            <textarea
+              value={form.question_text}
+              onChange={(e) => setForm({ ...form, question_text: e.target.value })}
+              className="w-full mt-1 border rounded-lg px-3 py-2 resize-y"
+              rows={5}
+              placeholder="Enter the question here"
+            />
           </div>
 
-          <div className="flex gap-2">
+          {/* Buttons */}
+          <div className="flex gap-2 mt-4">
             <button
-              onClick={handleUpload}
-              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              onClick={handleSave}
+              disabled={uploading}
+              className={`
+                px-6 py-2 rounded-lg text-dark-300 font-bold
+                ${uploading
+                  ? "bg-[#B5D8BF]/30 cursor-not-allowed"
+                  : "bg-[#B5D8BF]/50 hover:bg-[#B5D8BF]/70 transition-all shadow-sm hover:shadow-md"
+                }
+             `}
             >
-              Upload
+              {editingId ? "Update" : "Save"}
             </button>
+
             <button
               onClick={() => {
-                setShowUpload(false);
-                setUploadFile(null);
+                setShowForm(false);
+                setEditingId(null);
+                setForm({ level: "", position_text: "", question_text: "" });
               }}
               className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
             >
@@ -167,61 +347,64 @@ Product Manager,How do you prioritize features?,Strategy,medium,I use...`}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         {loading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mint-600"></div>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-[#B5D8BF]/50 border-b border-mint-400/30">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
+                    Level
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
                     Job Role
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
                     Question
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Difficulty
-                  </th>
                   {user?.role === 'admin' && (
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
+                    <th className="px-20 py-4 text-center text-xs font-bold text-dark-300 uppercase tracking-wide">
+                      <div className="-mr-16">Actions</div>
                     </th>
                   )}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {questions.length > 0 ? (
-                  questions.map((question) => (
-                    <tr key={question.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {question.job_role}
+                {filteredQuestions.length > 0 ? (
+                  filteredQuestions.map((question) => (
+                    <tr key={question.id} className="hover:bg-mint-50/50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                        {question.level}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 max-w-md">
-                        {question.question}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                        {question.position}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {question.category || 'N/A'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getDifficultyColor(
-                            question.difficulty
-                          )}`}
-                        >
-                          {question.difficulty || 'N/A'}
-                        </span>
+                      {/* <td className="px-6 py-4 text-sm text-gray-900 max-w-md whitespace-pre-line leading-relaxed">
+                        {((typeof question.question === "string" ? question.question : "").includes("?")
+                          ? question.question.split(/(?<=\?)/)     
+                          : question.question.split(/(?<=,)/)    
+                        )
+                          .map((part) => part.trim())
+                          .filter((part) => part.length > 0)
+                          .join("\n")}
+                      </td> */}
+                      <td className="px-6 py-4 text-sm text-dark-300 max-w-md whitespace-pre-line leading-relaxed">
+                        {(typeof question.question === "string" ? question.question : "")}
                       </td>
                       {user?.role === 'admin' && (
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <td className="px-6 py-4 text-right">
                           <button
-                            onClick={() => handleDelete(question.id)}
-                            className="text-red-600 hover:text-red-900"
+                            className="px-2 py-1 mr-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                            onClick={() => handleEdit(question.id)}
                           >
-                            <Trash2 size={18} />
+                            Edit
+                          </button>
+                          <button
+                            className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                            onClick={() => handleDelete(question.id)}
+                          >
+                            Delete
                           </button>
                         </td>
                       )}
@@ -230,8 +413,8 @@ Product Manager,How do you prioritize features?,Strategy,medium,I use...`}
                 ) : (
                   <tr>
                     <td
-                      colSpan={user?.role === 'admin' ? 5 : 4}
-                      className="px-6 py-8 text-center text-sm text-gray-500"
+                      colSpan={user?.role === 'admin' ? 3 : 2}
+                      className="px-6 py-8 text-center text-sm text-dark-300/60"
                     >
                       No questions found
                     </td>
@@ -247,3 +430,4 @@ Product Manager,How do you prioritize features?,Strategy,medium,I use...`}
 };
 
 export default Questions;
+

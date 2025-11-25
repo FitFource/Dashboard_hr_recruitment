@@ -38,29 +38,36 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-mint-50 via-mint-25 to-white text-black">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 fixed w-full z-10">
-        <div className="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <header className="bg-gradient-to-r from-mint-300 to-mint-400 shadow-lg border-b border-mint-500/20 fixed w-full z-10">
+        <div className="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between text-black">
           <div className="flex items-center">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="md:hidden mr-2 p-2 rounded-md hover:bg-gray-100"
+              className="md:hidden mr-2 p-2 rounded-xl hover:bg-mint-300/80 transition-all hover:shadow-md"
             >
               {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
-            <h1 className="text-xl font-bold text-purple-600">
+            <h1 className="text-xl font-bold tracking-tight">
               HR Recruitment Dashboard
             </h1>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-sm">
-              <p className="font-medium text-gray-900">{user?.full_name}</p>
-              <p className="text-gray-500 capitalize">{user?.role}</p>
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:block bg-white/40 backdrop-blur-sm rounded-2xl p-2 shadow-md border border-white/40">
+              <img
+                src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || "User"}&fontWeight=900&backgroundColor=B5D9C7`}
+                alt="profile"
+                className="w-8 h-8 rounded-xl"
+              />
+            </div>
+            <div className="text-sm hidden sm:block">
+              <p>{user?.name}</p>
+              <p className="opacity-70 capitalize text-xs">{user?.role}</p>
             </div>
             <button
               onClick={handleLogout}
-              className="p-2 rounded-md hover:bg-gray-100 text-gray-600"
+              className="p-2 rounded-xl hover:bg-peach-200 text-black transition-all hover:scale-110 hover:shadow-md"
               title="Logout"
             >
               <LogOut size={20} />
@@ -71,23 +78,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-16 h-full w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out z-20 ${
+        className={`fixed left-0 top-16 h-full w-64 bg-gradient-to-b from-mint-150 via-mint-100 to-white backdrop-blur-sm border-r border-mint-300/40 shadow-xl transform transition-transform duration-300 ease-in-out z-20 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } md:translate-x-0`}
       >
-        <nav className="p-4 space-y-2">
+        <nav className="p-4 space-y-2 text-black">
           {menuItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
               onClick={() => setSidebarOpen(false)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+              className={`flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all duration-200 ${
                 isActive(item.path)
-                  ? 'bg-purple-50 text-purple-700 font-medium'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-gradient-to-r from-mint-400 to-mint-300 shadow-md border border-mint-500/20 scale-[1.02] text-black'
+                  : 'hover:bg-mint-200/70 hover:text-black hover:translate-x-1 hover:shadow-sm'
               }`}
             >
-              <item.icon size={20} />
+              <item.icon size={22} strokeWidth={isActive(item.path) ? 2.5 : 2} />
               <span>{item.label}</span>
             </Link>
           ))}
@@ -95,7 +102,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </aside>
 
       {/* Main Content */}
-      <main className="md:ml-64 pt-16 min-h-screen">
+      <main className="md:ml-64 pt-16 min-h-screen text-black">
         <div className="p-4 sm:p-6 lg:p-8">
           {children}
         </div>
@@ -104,7 +111,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Overlay for mobile */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-10 md:hidden"
+          className="fixed inset-0 bg-black bg-opacity-30 z-10 md:hidden backdrop-blur-sm"
           onClick={() => setSidebarOpen(false)}
         />
       )}

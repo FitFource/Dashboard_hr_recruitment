@@ -1,21 +1,37 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from "react";
 import { Upload, Trash2, FileText } from 'lucide-react';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
 import { JobRequirement } from '../types';
 import { useAuthStore } from '../store/authStore';
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
+
+const MySwal = withReactContent(Swal);
+
 
 const Requirements: React.FC = () => {
   const [requirements, setRequirements] = useState<JobRequirement[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showUpload, setShowUpload] = useState(false);
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
   const { user } = useAuthStore();
+  const [roleFilter, setRoleFilter] = useState('');
+  const [levels, setLevels] = useState<string[]>([]);
+  const [positions, setPositions] = useState<string[]>([]);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [levelFilter, setLevelFilter] = useState('');
+  const [form, setForm] = useState({
+    level: "",
+    position_text: "",
+    requirement_text: ""
+  });
+
 
   useEffect(() => {
     fetchRequirements();
+    fetchPositions();
     
-    // Auto-refresh every 30 seconds (silent refresh)
     const interval = setInterval(() => {
       fetchRequirements(true);
     }, 30000);
@@ -38,109 +54,281 @@ const Requirements: React.FC = () => {
     }
   };
 
-  const handleUpload = async () => {
-    if (!uploadFile) {
-      toast.error('Please select a file');
+  const fetchPositions = async () => {
+    try {
+      const res = await api.get('/requirements/positions');
+
+      let uniqueLevels: string[] = [];
+      let uniquePositions: string[] = [];
+
+      if (Array.isArray(res.data)) {
+        uniqueLevels = Array.from(new Set(res.data.map((p: any) => p.level)));
+        uniquePositions = Array.from(new Set(res.data.map((p: any) => p.position)));
+      }
+      else if (res.data.level && res.data.position) {
+        uniqueLevels = Array.from(new Set(res.data.level));
+        uniquePositions = Array.from(new Set(res.data.position));
+      }
+
+      setLevels(uniqueLevels);
+      setPositions(uniquePositions);
+
+    } catch (err) {
+      console.error('Failed to fetch levels/positions', err);
+      toast.error('Failed to fetch levels/positions');
+    }
+  };
+
+  const handleSave = async () => {
+    const { level, position_text, requirement_text} = form;
+    if (!level || !position_text || !requirement_text) {
+      toast.error("All fields are required");
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', uploadFile);
+    setUploading(true);
+    setLoading(true);
 
     try {
-      const response = await api.post('/requirements/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      toast.success(response.data.message);
-      setShowUpload(false);
-      setUploadFile(null);
-      fetchRequirements();
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to upload requirements');
-      console.error('Error:', error);
+    
+      if (editingId) {
+        // Update
+        const res = await api.put(`/requirements/${editingId}`, {
+          level,
+          position: position_text,
+          requirements: requirement_text
+        });
+        setRequirements(prev =>
+          prev.map(q => q.id === editingId ? res.data.requirements : q)
+        );
+        toast.success("Job Requirements updated");
+      } else {
+        // Add new
+        const res = await api.post(`/requirements`, {
+          level,
+          position: position_text,
+          requirements: requirement_text
+        });
+        setRequirements(prev => {
+          const exist = prev.find(q => q.id === res.data.requirements.id);
+          if (exist) {
+            return prev.map(q => q.id === res.data.requirements.id ? res.data.requirements : q);
+          }
+          return [...prev, res.data.requirements];
+        });
+
+        setShowForm(false);
+        setEditingId(null);
+        setForm({ level: "", position_text: "", requirement_text: "" });
+        toast.success("Job Requirements added");
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.error || "Failed to save requirements");
+    }finally {
+      setUploading(false);
+      setLoading(false);
+      await fetchRequirements();
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this requirement?')) return;
+    const result = await MySwal.fire({
+      title: `Are you sure?`,
+      text: `Do you really want to DELETE this requirements?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Delete",
+      cancelButtonText: "Cancel",
+      reverseButtons: true,
+      focusCancel: true,
+      customClass: {
+        popup: "rounded-lg",
+      },
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await api.delete(`/requirements/${id}`);
-      toast.success('Requirement deleted successfully');
-      fetchRequirements();
+      toast.success("Job Requirements deleted successfully");
+      setRequirements(prev => prev.filter(q => q.id !== id));
     } catch (error: any) {
-      toast.error('Failed to delete requirement');
-      console.error('Error:', error);
+      toast.error("Failed to delete requirements");
+      console.error("Error:", error);
     }
   };
+
+  const handleEdit = async (id: number) => {
+    const q = requirements.find(q => q.id === id);
+    if (!q) return;
+
+    const result = await MySwal.fire({
+      title: "Edit Job Requirements",
+      html: `
+        <div class="flex flex-col gap-3 text-left">
+          <label class="text-sm font-semibold">Requirements</label>
+          <textarea id="edit-requirements" class="swal2-textarea" rows="4">${q.requirements}</textarea>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: "Save",
+      cancelButtonText: "Cancel",
+      focusConfirm: false,
+      customClass: {
+        popup: "rounded-lg",
+      },
+      preConfirm: () => {
+        const requirements = (document.getElementById("edit-requirements") as HTMLTextAreaElement)?.value;
+
+        if (!requirements) {
+          Swal.showValidationMessage("Requirements cannot be empty!");
+          return false;
+        }
+
+        return { requirements };
+      }
+    });
+
+    if (!result.isConfirmed) return;
+
+    const { requirements: newRequirements } = result.value;
+
+    try {
+      const res = await api.put(`/requirements/${id}`, {
+        requirements: newRequirements
+      });
+
+      setRequirements(prev =>
+        prev.map(x => x.id === id ? res.data.requirements : x)
+      );
+
+      toast.success("Job Requirements updated");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update requirements");
+    }
+  };
+
+  const uniqueRoles = Array.from(new Set(requirements.map(q => q.position)));
+  const filteredRequirements = requirements.filter(q =>
+    (roleFilter ? q.position === roleFilter : true) &&
+    (levelFilter ? q.level === levelFilter : true)
+  );
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Job Requirements</h2>
-          <p className="text-gray-600 mt-1">Manage job requirements for different roles</p>
+          <h2 className="text-2xl font-bold text-dark-300 tracking-tight">Job Requirements</h2>
+          <p className="text-dark-300/60 mt-1">You can manage job requirements for different roles</p>
         </div>
+
+        <div className="flex items-center gap-4 justify-end">
+          <div className="flex items-center gap-2">
+            <select
+              value={levelFilter}
+              onChange={e => setLevelFilter(e.target.value)}
+              className="px-3 py-1 border rounded w-40"
+            >
+              <option value="">All Levels</option>
+              {levels.map(lvl => (
+                <option key={lvl} value={lvl}>{lvl}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={roleFilter}
+              onChange={e => setRoleFilter(e.target.value)}
+              className="px-3 py-1 border rounded w-48" 
+            >
+              <option value="">All Roles</option>
+              {uniqueRoles.map(role => (
+                <option key={role} value={role}>{role}</option>
+              ))}
+            </select>
+          </div>
+        
         {user?.role === 'admin' && (
           <button
-            onClick={() => setShowUpload(!showUpload)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            onClick={() => setShowForm(!showForm)}
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#B5D8BF]/50 text-dark-300 rounded-2xl hover:bg-[#B5D8BF]/70 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02]"
           >
             <Upload size={20} />
-            Upload Requirements
+            Add Requirement
           </button>
         )}
+        </div>
       </div>
 
-      {/* Upload Section */}
-      {showUpload && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload Requirements</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Upload a CSV, Excel, or JSON file with job requirements. Required fields: job_role, requirement_type, description
-          </p>
-          
-          <div className="mb-4">
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <FileText className="mx-auto text-gray-400 mb-2" size={48} />
-              <label className="cursor-pointer">
-                <span className="text-primary-600 hover:text-primary-700 font-medium">
-                  Choose a file
-                </span>
-                <input
-                  type="file"
-                  accept=".csv,.xlsx,.xls,.json"
-                  onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                  className="hidden"
-                />
-              </label>
-              <p className="text-sm text-gray-500 mt-1">CSV, Excel, or JSON (max 10MB)</p>
-              {uploadFile && (
-                <p className="text-sm text-gray-900 mt-2">Selected: {uploadFile.name}</p>
-              )}
+      
+      {/* Form Section */}
+      {showForm && (
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <h3 className="text-lg font-semibold mb-4">
+            {editingId ? "Edit Requirements" : "Add New Requirement"}
+          </h3>
+
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label className="text-sm font-medium text-gray-700">Level</label>
+              <select
+                value={form.level}
+                onChange={e => setForm({ ...form, level: e.target.value })}
+                className="w-full mt-1 border rounded-lg px-3 py-2"
+              >
+                <option value="">Select Level</option>
+                {levels.map(lvl => <option key={lvl} value={lvl}>{lvl}</option>)}
+              </select>
+            </div>
+
+            <div className="flex-1">
+              <label className="text-sm font-medium text-gray-700">Job Role</label>
+              <select
+                value={form.position_text}
+                onChange={e => setForm({ ...form, position_text: e.target.value })}
+                className="w-full mt-1 border rounded-lg px-3 py-2"
+              >
+                <option value="">Select Job Role</option>
+                {positions.map(pos => <option key={pos} value={pos}>{pos}</option>)}
+              </select>
             </div>
           </div>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-            <h4 className="font-medium text-blue-900 mb-2">File Format Example (CSV):</h4>
-            <pre className="text-xs text-blue-800 overflow-x-auto">
-{`job_role,requirement_type,description,is_mandatory,minimum_years_experience,required_skills
-Software Engineer,Technical Skills,Proficient in JavaScript and React,true,3,"JavaScript,React,Node.js"
-Product Manager,Experience,Product management experience,true,5,`}
-            </pre>
+          {/* Requirements Text */}
+          <div className="mt-4">
+            <label className="text-sm font-medium text-gray-700">Requirements</label>
+            <textarea
+              value={form.requirement_text}
+              onChange={(e) => setForm({ ...form, requirement_text: e.target.value })}
+              className="w-full mt-1 border rounded-lg px-3 py-2 resize-y"
+              rows={5}
+              placeholder="Enter the job requirement here"
+            />
           </div>
 
-          <div className="flex gap-2">
+          {/* Buttons */}
+          <div className="flex gap-2 mt-4">
             <button
-              onClick={handleUpload}
-              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              onClick={handleSave}
+              disabled={uploading}
+              className={`
+                px-6 py-2 rounded-lg text-dark-300 font-bold
+                ${uploading
+                  ? "bg-[#B5D8BF]/30 cursor-not-allowed"
+                  : "bg-[#B5D8BF]/50 hover:bg-[#B5D8BF]/70 transition-all shadow-sm hover:shadow-md"
+                }
+              `}
             >
-              Upload
+              {editingId ? "Update" : "Save"}
             </button>
+
             <button
               onClick={() => {
-                setShowUpload(false);
-                setUploadFile(null);
+                setShowForm(false);
+                setEditingId(null);
+                setForm({ level: "", position_text: "", requirement_text: "" });
               }}
               className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
             >
@@ -154,83 +342,60 @@ Product Manager,Experience,Product management experience,true,5,`}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         {loading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-mint-600"></div>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-[#B5D8BF]/50 border-b border-mint-400/30">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
+                    Level
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
                     Job Role
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
                     Description
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Mandatory
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Min. Experience
-                  </th>
                   {user?.role === 'admin' && (
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
+                    <th className="px-20 py-4 text-center text-xs font-bold text-dark-300 uppercase tracking-wide">
+                      <div className="-mr-20">Actions</div>
                     </th>
                   )}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {requirements.length > 0 ? (
-                  requirements.map((requirement) => (
-                    <tr key={requirement.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {requirement.job_role}
+                {filteredRequirements.length > 0 ? (
+                  filteredRequirements.map((r) => (
+                    <tr key={r.id} className="hover:bg-mint-50/50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                        {r.level}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {requirement.requirement_type}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                        {r.position}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 max-w-md">
-                        {requirement.description}
-                        {requirement.required_skills && requirement.required_skills.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {requirement.required_skills.map((skill, idx) => (
-                              <span
-                                key={idx}
-                                className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded"
-                              >
-                                {skill}
-                              </span>
-                            ))}
-                          </div>
-                        )}
+                      <td className="px-6 py-4 text-sm text-dark-300 max-w-md whitespace-pre-line leading-relaxed">
+                        {(typeof r.requirements === "string" ? r.requirements : "")}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            requirement.is_mandatory
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {requirement.is_mandatory ? 'Yes' : 'No'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {requirement.minimum_years_experience
-                          ? `${requirement.minimum_years_experience} years`
-                          : 'N/A'}
-                      </td>
+
+                      {/* <td className="px-6 py-4 text-sm text-gray-900 whitespace-pre-line leading-relaxed">
+                        {r.requirements}
+                      </td> */}
+
                       {user?.role === 'admin' && (
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <td className="px-6 py-4 text-right">
                           <button
-                            onClick={() => handleDelete(requirement.id)}
-                            className="text-red-600 hover:text-red-900"
+                            className="px-2 py-1 mr-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                            onClick={() => handleEdit(r.id)}
                           >
-                            <Trash2 size={18} />
+                            Edit
+                          </button>
+                          <button
+                            className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                            onClick={() => handleDelete(r.id)}
+                          >
+                            Delete
                           </button>
                         </td>
                       )}
@@ -239,8 +404,8 @@ Product Manager,Experience,Product management experience,true,5,`}
                 ) : (
                   <tr>
                     <td
-                      colSpan={user?.role === 'admin' ? 6 : 5}
-                      className="px-6 py-8 text-center text-sm text-gray-500"
+                      colSpan={3}
+                      className="text-center text-dark-300/60 py-8"
                     >
                       No requirements found
                     </td>
@@ -256,3 +421,4 @@ Product Manager,Experience,Product management experience,true,5,`}
 };
 
 export default Requirements;
+
