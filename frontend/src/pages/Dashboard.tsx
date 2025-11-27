@@ -143,8 +143,8 @@ const Dashboard: React.FC = () => {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
         {/* Left: Title & subtitle */}
         <div>
-          <h2 className="text-3xl font-bold text-black tracking-tight">Dashboard Overview</h2>
-          <p className="text-black/60 mt-2">Track and analyze recruitment progress</p>
+          <h2 className="text-3xl font-bold text-primary-900 tracking-tight">Dashboard Overview</h2>
+          <p className="text-primary-900/60 mt-2">Track and analyze recruitment progress</p>
         </div>
 
         {/* Right: Filters */}
@@ -152,7 +152,7 @@ const Dashboard: React.FC = () => {
           <select
             value={levelFilter}
             onChange={e => setLevelFilter(e.target.value)}
-            className="px-4 py-2.5 border border-mint-300/60 rounded-2xl w-40 text-dark-300 bg-white hover:border-peach-300 focus:border-peach-400 focus:ring-2 focus:ring-peach-200/40 transition-all shadow-sm hover:shadow-md"
+            className="px-4 py-2.5 border border-accent/60 rounded-2xl w-40 text-primary-900 bg-white hover:border-primary-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/40 transition-all shadow-sm hover:shadow-md"
           >
             <option value="">All Levels</option>
             {levels.map(lv => (
@@ -162,7 +162,7 @@ const Dashboard: React.FC = () => {
           <select
             value={roleFilter}
             onChange={e => setRoleFilter(e.target.value)}
-            className="px-4 py-2.5 border border-mint-300/60 rounded-2xl w-40 text-dark-300 bg-white hover:border-peach-300 focus:border-peach-400 focus:ring-2 focus:ring-peach-200/40 transition-all shadow-sm hover:shadow-md"
+            className="px-4 py-2.5 border border-accent/60 rounded-2xl w-40 text-primary-900 bg-white hover:border-primary-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/40 transition-all shadow-sm hover:shadow-md"
           >
             <option value="">All Roles</option>
             {positions.map(pos => (
@@ -175,7 +175,7 @@ const Dashboard: React.FC = () => {
             value={startDate}
             onChange={e => setStartDate(e.target.value)}
             placeholder="Start"
-            className="px-4 py-2.5 border border-mint-300/60 rounded-2xl text-dark-300 bg-white hover:border-peach-300 focus:border-peach-400 focus:ring-2 focus:ring-peach-200/40 transition-all shadow-sm hover:shadow-md"
+            className="px-4 py-2.5 border border-accent/60 rounded-2xl text-primary-900 bg-white hover:border-primary-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/40 transition-all shadow-sm hover:shadow-md"
           />
 
           <input
@@ -183,7 +183,7 @@ const Dashboard: React.FC = () => {
             name="end_date" 
             value={endDate}
             onChange={e => setEndDate(e.target.value)}
-            className="px-4 py-2.5 border border-mint-300/60 rounded-2xl text-dark-300 bg-white hover:border-peach-300 focus:border-peach-400 focus:ring-2 focus:ring-peach-200/40 transition-all shadow-sm hover:shadow-md"
+            className="px-4 py-2.5 border border-accent/60 rounded-2xl text-primary-900 bg-white hover:border-primary-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/40 transition-all shadow-sm hover:shadow-md"
           />
         </div>
       </div>
@@ -193,25 +193,25 @@ const Dashboard: React.FC = () => {
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Candidates Card */}
-        <div className="bg-gradient-to-br from-white to-[#B5D8BF]/70 rounded-3xl shadow-lg border border-[#8FCB9B]/50 p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
+        <div className="bg-gradient-to-br from-white to-accent/30 rounded-3xl shadow-lg border border-accent/50 p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="text-xs font-bold text-dark-300/70 uppercase tracking-wide">
+              <p className="text-xs text-primary-900/70 uppercase tracking-wide">
                 Total Candidates
               </p>
-              <h3 className="text-4xl font-bold text-black mt-2">
+              <h3 className="text-4xl font-bold text-primary-900 mt-2">
                 {overview?.total_candidates || 0}
               </h3>
               <div className="flex items-center mt-3">
-                <span className="text-sm text-[#2F7A51] bg-[#B5D8BF]/30 px-3 py-1.5 rounded-full shadow-sm">
+                <span className="text-sm text-primary-900 bg-accent/30 px-3 py-1.5 rounded-full shadow-sm">
                   ↑ 100%
                 </span>
-                <span className="text-xs text-dark-300/50 ml-2">total candidate</span>
+                <span className="text-xs text-primary-900/50 ml-2">total candidate</span>
               </div>
-              <p className="text-xs text-dark-300/40 mt-2">All candidates in system</p>
+              <p className="text-xs text-primary-900/40 mt-2">All candidates in system</p>
             </div>
-            <div className="w-16 h-16 bg-gradient-to-br from-[#2F7A51] to-[#8FCB9B] rounded-3xl flex items-center justify-center shadow-lg shadow-[#2F7A51]/30">
-              <Users className="w-8 h-8 text-dark-300" strokeWidth={2.5} />
+            <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-900 rounded-3xl flex items-center justify-center shadow-lg shadow-primary-500/30">
+              <Users className="w-8 h-8 text-background" strokeWidth={2.5} />
             </div>
           </div>
         </div>
@@ -220,22 +220,22 @@ const Dashboard: React.FC = () => {
         <div className="bg-gradient-to-br from-white to-emerald-50 rounded-3xl shadow-lg border border-emerald-200/40 p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="text-xs font-bold text-dark-300/70 uppercase tracking-wide">
+              <p className="text-xs text-primary-900/70 uppercase tracking-wide">
                 Accepted
               </p>
-              <h3 className="text-4xl font-bold text-black mt-2">
+              <h3 className="text-4xl font-bold text-primary-900 mt-2">
                 {overview?.accepted_candidates || 0}
               </h3>
               <div className="flex items-center mt-3">
                 <span className="text-sm text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-full shadow-sm">
                   ↑ {acceptedTrend}%
                 </span>
-                <span className="text-xs text-dark-300/50 ml-2">vs total</span>
+                <span className="text-xs text-primary-900/50 ml-2">vs total</span>
               </div>
-              <p className="text-xs text-dark-300/40 mt-2">Successfully hired</p>
+              <p className="text-xs text-primary-900/40 mt-2">Successfully hired</p>
             </div>
             <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-3xl flex items-center justify-center shadow-lg shadow-emerald-400/30">
-              <UserCheck className="w-8 h-8 text-dark-300" strokeWidth={2.5} />
+              <UserCheck className="w-8 h-8 text-primary-900" strokeWidth={2.5} />
             </div>
           </div>
         </div>
@@ -244,22 +244,22 @@ const Dashboard: React.FC = () => {
         <div className="bg-gradient-to-br from-white to-red-50 rounded-3xl shadow-lg border border-red-200/40 p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="text-xs font-bold text-dark-300/70 uppercase tracking-wide">
+              <p className="text-xs text-primary-900/70 uppercase tracking-wide">
                 Rejected
               </p>
-              <h3 className="text-4xl font-bold text-black mt-2">
+              <h3 className="text-4xl font-bold text-primary-900 mt-2">
                 {overview?.rejected_candidates || 0}
               </h3>
               <div className="flex items-center mt-3">
                 <span className="text-sm text-red-700 bg-red-100 px-3 py-1.5 rounded-full shadow-sm">
                   ↑ {rejectedTrend}%
                 </span>
-                <span className="text-xs text-dark-300/50 ml-2">vs total</span>
+                <span className="text-xs text-primary-900/50 ml-2">vs total</span>
               </div>
-              <p className="text-xs text-dark-300/40 mt-2">Not suitable for role</p>
+              <p className="text-xs text-primary-900/40 mt-2">Not suitable for role</p>
             </div>
             <div className="w-16 h-16 bg-gradient-to-br from-red-400 to-red-600 rounded-3xl flex items-center justify-center shadow-lg shadow-red-400/30">
-              <UserX className="w-8 h-8 text-dark-300" strokeWidth={2.5} />
+              <UserX className="w-8 h-8 text-primary-900" strokeWidth={2.5} />
             </div>
           </div>
         </div>
@@ -268,22 +268,22 @@ const Dashboard: React.FC = () => {
         <div className="bg-gradient-to-br from-white to-yellow-100 rounded-3xl shadow-lg border border-yellow-200/40 p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="text-xs font-bold text-dark-300/70 uppercase tracking-wide">
+              <p className="text-xs text-primary-900/70 uppercase tracking-wide">
                 In-Progress
               </p>
-              <h3 className="text-4xl font-bold text-black mt-2">
+              <h3 className="text-4xl font-bold text-primary-900 mt-2">
                 {overview?.in_progress_candidates || 0}
               </h3>
               <div className="flex items-center mt-3">
                 <span className="text-sm text-yellow-700 bg-yellow-100 px-3 py-1.5 rounded-full shadow-sm">
                   ↑ {processedTrend}%
                 </span>
-                <span className="text-xs text-dark-300/50 ml-2">vs total</span>
+                <span className="text-xs text-primary-900/50 ml-2">vs total</span>
               </div>
-              <p className="text-xs text-dark-300/40 mt-2">Under review</p>
+              <p className="text-xs text-primary-900/40 mt-2">Under review</p>
             </div>
             <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-3xl flex items-center justify-center shadow-lg shadow-yellow-400/30">
-              <Clock className="w-8 h-8 text-dark-300" strokeWidth={2.5} />
+              <Clock className="w-8 h-8 text-primary-900" strokeWidth={2.5} />
             </div>
           </div>
         </div>
@@ -293,13 +293,13 @@ const Dashboard: React.FC = () => {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Bar Chart - Candidates by Role */}
-        <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl border border-mint-200/50 p-6 hover:shadow-2xl transition-all">
+        <div className="bg-background/95 backdrop-blur-sm rounded-3xl shadow-xl border border-accent/50 p-6 hover:shadow-2xl transition-all">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-xl font-bold text-dark-300 tracking-tight">
+              <h3 className="text-xl font-bold text-primary-900 tracking-tight">
                 Candidates by Job Role
               </h3>
-              <p className="text-sm text-dark-300/60 mt-1">Distribution across positions</p>
+              <p className="text-sm text-primary-900/60 mt-1">Distribution across positions</p>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={510}>
@@ -310,16 +310,16 @@ const Dashboard: React.FC = () => {
                 angle={-45} 
                 textAnchor="end" 
                 height={100}
-                tick={{ fontSize: 11, fill: '#2F4F3F', fontWeight: 600 }}
-                stroke="#B5D8BF"
+                tick={{ fontSize: 11, fill: '#213448', fontWeight: 600 }}
+                stroke="#94B4C1"
               />
-              <YAxis tick={{ fontSize: 11, fill: '#2F4F3F', fontWeight: 600 }} stroke="#B5D8BF" />
+              <YAxis tick={{ fontSize: 11, fill: '#213448', fontWeight: 600 }} stroke="#94B4C1" />
               <Tooltip 
                 contentStyle={{ 
                   backgroundColor: '#fff', 
-                  border: '1px solid #B5D8BF',
+                  border: '1px solid #94B4C1',
                   borderRadius: '16px',
-                  boxShadow: '0 10px 25px -5px rgba(136, 180, 148, 0.25)',
+                  boxShadow: '0 10px 25px -5px rgba(148, 180, 193, 0.25)',
                   fontWeight: 600
                 }}
               />
@@ -340,13 +340,13 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Pie Chart - Status Distribution */}
-        <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl border border-mint-200/50 p-6 hover:shadow-2xl transition-all">
+        <div className="bg-background/95 backdrop-blur-sm rounded-3xl shadow-xl border border-accent/50 p-6 hover:shadow-2xl transition-all">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-xl font-bold text-dark-300 tracking-tight">
+              <h3 className="text-xl font-bold text-primary-900 tracking-tight">
                 Status Distribution
               </h3>
-              <p className="text-sm text-dark-300/60 mt-1">Current candidate breakdown</p>
+              <p className="text-sm text-primary-900/60 mt-1">Current candidate breakdown</p>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={350}>
@@ -372,9 +372,9 @@ const Dashboard: React.FC = () => {
             <Tooltip 
               contentStyle={{ 
                 backgroundColor: '#fff',
-                border: '1px solid #B5D8BF',
+                border: '1px solid #94B4C1',
                 borderRadius: '16px',
-                boxShadow: '0 10px 25px -5px rgba(136,180,148,0.25)',
+                boxShadow: '0 10px 25px -5px rgba(148,180,193,0.25)',
                 fontWeight: 600
               }}
             />
@@ -386,15 +386,15 @@ const Dashboard: React.FC = () => {
           <div className="flex justify-center items-center gap-6 mt-20">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded-full bg-[#10b981] shadow-sm"></div>
-            <div className="text-xs text-dark-300 font-medium">Accepted</div>
+            <div className="text-xs text-primary-900 font-medium">Accepted</div>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded-full bg-[#ef4444] shadow-sm"></div>
-            <div className="text-xs text-dark-300 font-medium">Rejected</div>
+            <div className="text-xs text-primary-900 font-medium">Rejected</div>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded-full bg-[#FACC15] shadow-sm"></div>
-            <div className="text-xs text-dark-300 font-medium">In Progress</div>
+            <div className="text-xs text-primary-900 font-medium">In Progress</div>
           </div>
         </div>
         </div>
@@ -402,13 +402,13 @@ const Dashboard: React.FC = () => {
 
       {/* Application Trends */}
       {trends.length > 0 && (
-        <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl border border-mint-200/50 p-6 hover:shadow-2xl transition-all">
+        <div className="bg-background/95 backdrop-blur-sm rounded-3xl shadow-xl border border-accent/50 p-6 hover:shadow-2xl transition-all">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-xl font-bold text-dark-300 tracking-tight">
+              <h3 className="text-xl font-bold text-primary-900 tracking-tight">
                 Application Trends
               </h3>
-              <p className="text-sm text-dark-300/60 mt-1">Last 7 days activity</p>
+              <p className="text-sm text-primary-900/60 mt-1">Last 7 days activity</p>
             </div>
           </div>
 
@@ -443,22 +443,22 @@ const Dashboard: React.FC = () => {
 
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 12, fill: '#2F4F3F', fontWeight: 600 }}
-                stroke="#B5D8BF"
+                tick={{ fontSize: 12, fill: '#213448', fontWeight: 600 }}
+                stroke="#94B4C1"
                 tickFormatter={(value) => {
                   const date = new Date(value);
                   return `${date.getMonth() + 1}/${date.getDate()}`;
                 }}
               />
 
-              <YAxis tick={{ fontSize: 12, fill: '#2F4F3F', fontWeight: 600 }} stroke="#B5D8BF" />
+              <YAxis tick={{ fontSize: 12, fill: '#213448', fontWeight: 600 }} stroke="#94B4C1" />
 
               <Tooltip
                 contentStyle={{
                   backgroundColor: "#fff",
-                  border: "1px solid #B5D8BF",
+                  border: "1px solid #94B4C1",
                   borderRadius: "16px",
-                  boxShadow: "0 10px 25px -5px rgba(136, 180, 148, 0.25)",
+                  boxShadow: "0 10px 25px -5px rgba(148, 180, 193, 0.25)",
                   fontWeight: 600
                 }}
               />
@@ -526,56 +526,56 @@ const Dashboard: React.FC = () => {
 
 
       {/* Top Candidates Today */}
-      <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl border border-mint-200/50 p-6 hover:shadow-2xl transition-all">
+      <div className="bg-background/95 backdrop-blur-sm rounded-3xl shadow-xl border border-accent/50 p-6 hover:shadow-2xl transition-all">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h3 className="text-xl font-bold text-dark-300 tracking-tight">
+              <h3 className="text-xl font-bold text-primary-900 tracking-tight">
                 Most Processed Candidates Today
               </h3>
-              <p className="text-sm text-dark-300/60 mt-1">Top 10 candidates with most activity</p>
+              <p className="text-sm text-primary-900/60 mt-1">Top 10 candidates with most activity</p>
             </div>
           </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-mint-200">
-            <thead className="bg-gradient-to-r from-mint-200/80 to-mint-300/70 border-b border-mint-400/30">
+          <table className="min-w-full divide-y divide-accent/30">
+            <thead className="bg-gradient-to-r from-primary-500/80 to-primary-500/70 border-b border-primary-500/30">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
+                <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                   Name
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
+                <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                   Email
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
+                <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                   Level
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
+                <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                   Job Role
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
+                <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                   Status
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
+                <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                   Score
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
+                <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                   Rank
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-mint-100">
+            <tbody className="bg-white divide-y divide-accent/20">
               {topCandidates.length > 0 ? (
                 topCandidates.map((candidate) => (
-                  <tr key={candidate.id} className="hover:bg-mint-50/50 transition-colors">                      
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300/70">
+                  <tr key={candidate.id} className="hover:bg-background/50 transition-colors">                      
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900/70">
                       {candidate.name}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300/70">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900/70">
                       {candidate.email}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300/70">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900/70">
                       {candidate.level}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300/70">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900/70">
                       {candidate.job_role}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -585,7 +585,7 @@ const Dashboard: React.FC = () => {
                             ? 'bg-emerald-100 text-emerald-800'
                             : candidate.status === 'rejected'
                             ? 'bg-red-100 text-red-800'
-                            : 'bg-peach-100 text-peach-800'
+                            : 'bg-yellow-100 text-yellow-800'
                         }`}
                       >
                         {candidate.status.replace('_', ' ')}
@@ -595,23 +595,23 @@ const Dashboard: React.FC = () => {
                       <div className="flex items-center">
                         <div
                           className="flex-1 h-2.5 rounded-full mr-2 max-w-[60px] shadow-inner"
-                          style={{ backgroundColor: 'rgba(181, 216, 191, 0.3)' }} // Mint Green transparan sebagai track
+                          style={{ backgroundColor: 'rgba(148, 180, 193, 0.3)' }}
                         >
                           <div
                             className="h-2.5 rounded-full shadow-sm"
                             style={{
                               width: `${candidate.score || 0}%`,
-                              backgroundColor: '#B5D8BF', // Mint Green sebagai fill
+                              backgroundColor: '#547792',
                             }}
                           />
                         </div>
-                        <span className="text-sm text-gray-700">
+                        <span className="text-sm text-primary-900">
                           {candidate.score || 'N/A'}
                         </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-peach-100 to-peach-200/70 text-peach-900 shadow-sm">
+                      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-accent/50 to-accent/70 text-primary-900 shadow-sm">
                         {candidate.rank}
                       </span>
                     </td>
@@ -621,9 +621,9 @@ const Dashboard: React.FC = () => {
                 <tr>
                   <td colSpan={6} className="px-6 py-8 text-center">
                     <div className="flex flex-col items-center justify-center">
-                      <Clock className="w-16 h-16 text-mint-300 mb-3" />
-                      <p className="text-sm text-dark-300/60">No candidates processed today</p>
-                      <p className="text-xs text-dark-300/40 mt-1">Check back later for updates</p>
+                      <Clock className="w-16 h-16 text-accent mb-3" />
+                      <p className="text-sm text-primary-900/60">No candidates processed today</p>
+                      <p className="text-xs text-primary-900/40 mt-1">Check back later for updates</p>
                     </div>
                   </td>
                 </tr>
@@ -637,5 +637,3 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
-
-

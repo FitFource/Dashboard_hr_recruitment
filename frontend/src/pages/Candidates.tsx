@@ -175,7 +175,7 @@ const renderDropdown = (candidate: Candidate) => {
       <select 
         value={candidate.status_id}
         onChange={e => handleStatusChange(candidate, Number(e.target.value))}
-        className="w-24 px-3 py-1.5 rounded-2xl border border-mint-400/70 focus:ring-2 focus:ring-peach-300/40 focus:border-peach-400 bg-white cursor-pointer hover:bg-mint-50 transition-all font-bold text-dark-300 shadow-sm"
+        className="w-24 px-3 py-1.5 rounded-2xl border border-accent/70 focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 bg-white cursor-pointer hover:bg-background/50 transition-all text-primary-900 shadow-sm"
         title="Update candidate status"
       >
         <option value={1}>Open</option>
@@ -200,18 +200,18 @@ const renderDropdown = (candidate: Candidate) => {
   return (
     <div className="space-y-6">
       {/* Filters */}
-      <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-xl border border-mint-200/50 p-5">
+      <div className="bg-background/95 backdrop-blur-sm rounded-3xl shadow-xl border border-accent/50 p-5">
         <div className="flex gap-3">
           <div className="md:col-span-2">
             <div className="relative w-[31.25rem]">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-dark-300/50" size={20} />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-primary-900/50" size={20} />
               <input
                 type="text"
                 placeholder="Search by name or email..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleKeyPress}
-                className="w-full pl-11 pr-4 py-3 border border-mint-300/60 rounded-2xl focus:ring-2 focus:ring-peach-300/40 focus:border-peach-400 transition-all text-dark-300 hover:border-mint-400 shadow-sm"
+                className="w-full pl-11 pr-4 py-3 border border-accent/60 rounded-2xl focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 transition-all text-primary-900 hover:border-accent shadow-sm"
               />
             </div>
           </div>
@@ -220,7 +220,7 @@ const renderDropdown = (candidate: Candidate) => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-4 py-3 border border-mint-300/60 rounded-2xl focus:ring-2 focus:ring-peach-300/40 focus:border-peach-400 transition-all text-dark-300 hover:border-mint-400 shadow-sm"
+              className="w-full px-4 py-3 border border-accent/60 rounded-2xl focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 transition-all text-primary-900 hover:border-accent shadow-sm"
             >
               <option value="">All Status</option>
               <option value="In Progress">In Progress</option>
@@ -232,7 +232,7 @@ const renderDropdown = (candidate: Candidate) => {
             <select
               value={levelFilter}
               onChange={(e) => setLevelFilter(e.target.value)}
-              className="w-full px-4 py-3 border border-mint-300/60 rounded-2xl focus:ring-2 focus:ring-peach-300/40 focus:border-peach-400 transition-all text-dark-300 hover:border-mint-400 shadow-sm"
+              className="w-full px-4 py-3 border border-accent/60 rounded-2xl focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 transition-all text-primary-900 hover:border-accent shadow-sm"
             >
               <option value="">All Levels</option>
               {levels.map((lvl) => (
@@ -246,7 +246,7 @@ const renderDropdown = (candidate: Candidate) => {
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="w-full px-4 py-3 border border-mint-300/60 rounded-2xl focus:ring-2 focus:ring-peach-300/40 focus:border-peach-400 transition-all text-dark-300 hover:border-mint-400 shadow-sm"
+              className="w-full px-4 py-3 border border-accent/60 rounded-2xl focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 transition-all text-primary-900 hover:border-accent shadow-sm"
             >
               <option value="">All Roles</option>
               {positions.map((pos) => (
@@ -261,7 +261,7 @@ const renderDropdown = (candidate: Candidate) => {
         <div className="mt-4 flex gap-3">
           <button
             onClick={handleSearch}
-           className="px-5 py-2.5 bg-[#B5D8BF]/50 text-dark-300 rounded-2xl hover:bg-[#B5D8BF]/70 transition-all shadow-sm hover:shadow-md hover:scale-[1.02]"
+           className="px-5 py-2.5 bg-primary-500 text-background rounded-2xl hover:bg-primary-600 transition-all shadow-sm hover:shadow-md hover:scale-[1.02]"
           >
             Apply Filters
           </button>
@@ -272,7 +272,7 @@ const renderDropdown = (candidate: Candidate) => {
               setRoleFilter('');
               setLevelFilter('');
             }}
-            className="px-5 py-2.5 bg-[#B5D8BF]/50 text-dark-300 rounded-2xl hover:bg-[#B5D8BF]/70 transition-all shadow-sm hover:shadow-md hover:scale-[1.02]"
+            className="px-5 py-2.5 bg-accent text-primary-900 rounded-2xl hover:bg-accent/80 transition-all shadow-sm hover:shadow-md hover:scale-[1.02]"
           >
             Clear Filters
           </button>
@@ -280,68 +280,68 @@ const renderDropdown = (candidate: Candidate) => {
       </div>
 
       {/* Candidates Table */}
-      <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border-2 border-mint-200/50 overflow-hidden">
+      <div className="bg-background/95 backdrop-blur-sm rounded-3xl shadow-xl border border-accent/50 p-6 hover:shadow-2xl transition-all">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="relative">
-              <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary-200"></div>
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-accent/20"></div>
               <div className="animate-spin rounded-full h-16 w-16 border-4 border-t-primary-600 absolute top-0"></div>
             </div>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-mint-200">
-              <thead className="bg-[#B5D8BF] border-b border-mint-400/30">
+            <table className="min-w-full table-fixed divide-y divide-accent/30">
+              <thead className="bg-gradient-to-r from-primary-500/80 to-primary-500/70 border-b border-primary-500/30 rounded-t-2xl">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
+                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Name
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
+                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Email
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
+                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Level
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
+                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Job Role
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
+                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Residence
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
+                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Status
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
+                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Score
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
+                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Rank
                   </th>
                   {user?.role === 'admin' && (
-                    <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
+                    <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                       <div className="mr-10">Actions</div>
                     </th>
 
                   )}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-mint-100">
+              <tbody className="bg-white divide-y divide-accent/20 rounded-b-2xl">
                 {candidates.length > 0 ? (
                   candidates.map((candidate) => (
-                    <tr key={candidate.id} className="hover:bg-mint-50/50 transition-colors">
+                    <tr key={candidate.id} className="hover:bg-background/50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-dark-300">{candidate.name || 'N/A'}</div>
+                        <div className="text-sm text-primary-900">{candidate.name || 'N/A'}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300/70">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900/70">
                         {candidate.email || 'N/A'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
                         {candidate.level || 'N/A'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
                         {candidate.position || 'N/A'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
                         {candidate.residence || 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -353,14 +353,14 @@ const renderDropdown = (candidate: Candidate) => {
                           {candidate.status_label.replace('_', ' ')}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
                         {candidate.score || 0}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
                         {candidate.rank || 0}
                       </td>
                       {user?.role === 'admin' && (
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
                         {renderDropdown(candidate)}
                       </td>
                       )}
@@ -368,7 +368,7 @@ const renderDropdown = (candidate: Candidate) => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center text-sm text-dark-300/60">
+                    <td colSpan={7} className="px-6 py-8 text-center text-sm text-primary-900/60">
                       No candidates found
                     </td>
                   </tr>

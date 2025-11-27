@@ -7,41 +7,36 @@ export default {
   theme: {
     extend: {
       colors: {
-        mint: {
-          50: '#f4faf6',
-          100: '#e8f5ed',
-          200: '#d4ebdc',
-          300: '#B5D8BF',  // Base Mint Green
-          400: '#9ACC9F',
-          500: '#88B494',  // Darker untuk tombol/highlight
-          600: '#6fa87d',
-          700: '#5a8f6a',
-          800: '#467252',
-          900: '#355842',
+        primary: {
+          DEFAULT: '#213448',  // primary deep
+          50: '#f0f3f6',
+          100: '#dde3e8',
+          200: '#bcc7d2',
+          300: '#94a8b9',
+          400: '#6d8a9f',
+          500: '#547792',  // secondary
+          600: '#425d75',
+          700: '#354c5f',
+          800: '#2b3e4f',
+          900: '#213448',  // primary deep
         },
-        peach: {
-          50: '#fef8f5',
-          100: '#fdeee8',
-          200: '#fbd9cc',
-          300: '#F4A896',  // Soft Coral/Peach aksen
-          400: '#f18f77',
-          500: '#ed7457',
-          600: '#d85839',
-          700: '#b4412c',
-          800: '#923527',
-          900: '#782d24',
+        accent: {
+          DEFAULT: '#94B4C1',  // accent
+          50: '#f4f8f9',
+          100: '#e8eff2',
+          200: '#d5e3e8',
+          300: '#bdd4dc',
+          400: '#a8c4cf',
+          500: '#94B4C1',  // accent
+          600: '#7699ab',
+          700: '#5f7f8e',
+          800: '#4d6673',
+          900: '#3f535d',
         },
-        dark: {
-          50: '#f7f8f7',
-          100: '#e8eae9',
-          200: '#d1d5d3',
-          300: '#2F4F3F',  // Dark Green untuk teks
-          400: '#334',    // Charcoal
-          500: '#2a3f32',
-          600: '#1f2e24',
-          700: '#1a251f',
-          800: '#141d18',
-          900: '#0f1612',
+        background: {
+          DEFAULT: '#ECEFCA',  // light background
+          light: '#f7f9e8',
+          dark: '#e5e8bd',
         },
       },
     },

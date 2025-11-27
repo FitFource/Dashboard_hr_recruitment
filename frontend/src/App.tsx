@@ -6,7 +6,7 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Candidates from './pages/Candidates';
-import CandidateDetail from './pages/CandidateDetail';
+import HomeUser from './pages/HomeUser';
 import Questions from './pages/Questions';
 import Requirements from './pages/Requirements';
 
@@ -46,16 +46,6 @@ const App: React.FC = () => {
             </ProtectedRoute>
           }
         />
-        {/* <Route
-          path="/candidates/:id"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <CandidateDetail />
-              </Layout>
-            </ProtectedRoute>
-          }
-        /> */}
         <Route
           path="/questions"
           element={
@@ -74,6 +64,14 @@ const App: React.FC = () => {
                 <Requirements />
               </Layout>
             </ProtectedRoute>
+          }
+        />
+        <Route 
+          path="/HomeUser" 
+          element={
+            <RequireAuth roles={['user']}>
+              <HomeUser />
+            </RequireAuth>
           }
         />
         <Route path="*" element={<Navigate to="/" />} />

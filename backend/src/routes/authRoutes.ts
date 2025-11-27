@@ -6,36 +6,13 @@ import { validateRequest } from '../middleware/validation';
 
 const router = express.Router();
 
-/**
- * @swagger
- * /api/auth/register:
- *   post:
- *     summary: Register a new user
- *     tags: [Authentication]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *               full_name:
- *                 type: string
- *               role:
- *                 type: string
- *                 enum: [admin, recruiter, viewer]
- */
 router.post(
   '/register',
   [
     body('email').isEmail().withMessage('Valid email is required'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-    body('full_name').notEmpty().withMessage('Full name is required'),
-    body('role').optional().isIn(['admin', 'recruiter', 'viewer']),
+    body('name').notEmpty().withMessage('Full name is required'),
+    body('role').optional().isIn(['admin', 'viewer','user']),
     validateRequest,
   ],
   register

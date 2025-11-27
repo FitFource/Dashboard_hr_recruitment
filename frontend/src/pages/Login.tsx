@@ -20,9 +20,18 @@ const Login: React.FC = () => {
 
     try {
       const response = await api.post('/auth/login', { email, password });
-      setAuth(response.data.user, response.data.token);
+      const user = response.data.user;
+      const token = response.data.token;
+      setAuth(user, token);
       toast.success('Login successful!');
-      navigate('/');
+      // navigate('/');
+      if (user.role === 'admin' || user.role === 'viewer') {
+        navigate('/Dashboard');   
+      } else if (user.role === 'user') {
+        navigate('/HomeUser'); 
+      } else {
+        navigate('/unauthorized'); 
+      }
     } catch (error: any) {
       let message = 'Login failed';
       if (error.response?.status === 401) {
@@ -42,19 +51,30 @@ const Login: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-mint-200 via-mint-100 to-peach-100 flex items-center justify-center p-4">
-      <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 w-full max-w-md border border-mint-300/30">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background-light to-accent/20 flex items-center justify-center p-4">
+      <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 w-full max-w-md border border-accent/30">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-mint-400 to-mint-500 rounded-3xl mb-4 shadow-lg shadow-mint-400/30 border border-mint-500/20">
-            <LogIn className="text-dark-300" size={36} strokeWidth={2.5} />
+
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-900 rounded-3xl mb-4 shadow-lg shadow-primary-500/30 border border-primary-500/20">
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              fill="currentColor" 
+              className="w-14 h-14 text-background"
+            >
+              <path
+                d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2h19.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z"
+              />
+            </svg>
           </div>
-          <h1 className="text-3xl font-bold text-dark-300 tracking-tight">Welcome Back</h1>
-          <p className="text-dark-300/70 mt-2">HR Recruitment Dashboard</p>
+
+          <h1 className="text-3xl font-bold text-primary-900 tracking-tight">LOGIN</h1>
+          <p className="text-primary-900/70 mt-2">HR Recruitment Dashboard</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="email" className="block text-sm text-dark-300 mb-2">
+            <label htmlFor="email" className="block text-sm text-primary-900 mb-2">
               Email Address
             </label>
             <input
@@ -63,13 +83,13 @@ const Login: React.FC = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 border border-mint-300/60 rounded-2xl focus:ring-2 focus:ring-peach-300/50 focus:border-peach-400 transition-all bg-mint-50/30 hover:bg-white text-dark-300 shadow-sm"
+              className="w-full px-4 py-3 border border-accent/60 rounded-2xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all bg-background/30 hover:bg-white text-primary-900 shadow-sm"
               placeholder="your@email.com"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm text-dark-300 mb-2">
+            <label htmlFor="password" className="block text-sm text-primary-900 mb-2">
               Password
             </label>
             <input
@@ -78,7 +98,7 @@ const Login: React.FC = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-4 py-3 border border-mint-300/60 rounded-2xl focus:ring-2 focus:ring-peach-300/50 focus:border-peach-400 transition-all bg-mint-50/30 hover:bg-white text-dark-300 shadow-sm"
+              className="w-full px-4 py-3 border border-accent/60 rounded-2xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all bg-background/30 hover:bg-white text-primary-900 shadow-sm"
               placeholder="••••••••"
             />
           </div>
@@ -86,13 +106,14 @@ const Login: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 bg-gradient-to-r from-mint-500 to-mint-400 text-dark-300 rounded-2xl hover:from-mint-600 hover:to-mint-500 focus:ring-3 focus:ring-peach-300/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-mint-400/30 hover:shadow-xl hover:shadow-peach-300/40 hover:scale-[1.02]"
+            className="w-full py-3.5 bg-gradient-to-r from-primary-500 to-primary-900 text-background rounded-2xl hover:from-primary-600 hover:to-primary-800 focus:ring-3 focus:ring-primary-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-600/40 hover:scale-[1.02] font-medium"
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
       </div>
     </div>
+
   );
 };
 

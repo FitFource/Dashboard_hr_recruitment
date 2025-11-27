@@ -223,8 +223,8 @@ const Questions: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-dark-300 tracking-tight">Interview Questions</h2>
-          <p className="text-dark-300/60 mt-1">You can manage interview questions for different roles</p>
+          <h2 className="text-2xl font-bold text-dark-300 tracking-tight">Quick Call Questions</h2>
+          <p className="text-dark-300/60 mt-1">Manage interview questions for different roles</p>
         </div>
 
       
@@ -257,7 +257,10 @@ const Questions: React.FC = () => {
           {user?.role === 'admin' && (
             <button
               onClick={() => setShowForm(!showForm)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[#B5D8BF]/50 text-dark-300 rounded-2xl hover:bg-[#B5D8BF]/70 transition-all shadow-sm hover:shadow-md hover:scale-[1.02]"
+              className="flex items-center gap-2 px-5 py-2.5 
+                        bg-[#94B4C1] text-dark-300 rounded-xl
+                        hover:bg-[#547792] hover:text-white
+                        transition-all shadow-sm hover:shadow-md"
             >
               <Upload size={20} />
               Add Question
@@ -319,12 +322,13 @@ const Questions: React.FC = () => {
               onClick={handleSave}
               disabled={uploading}
               className={`
-                px-6 py-2 rounded-lg text-dark-300 font-bold
+                px-6 py-2 rounded-lg text-white font-semibold
                 ${uploading
-                  ? "bg-[#B5D8BF]/30 cursor-not-allowed"
-                  : "bg-[#B5D8BF]/50 hover:bg-[#B5D8BF]/70 transition-all shadow-sm hover:shadow-md"
+                  ? "bg-[#547792]/40 cursor-not-allowed"
+                  : "bg-[#547792] hover:bg-[#466680] transition-all shadow-sm hover:shadow-md"
                 }
-             `}
+              `}
+
             >
               {editingId ? "Update" : "Save"}
             </button>
@@ -352,20 +356,22 @@ const Questions: React.FC = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-[#B5D8BF]/50 border-b border-mint-400/30">
+              <thead className="bg-gradient-to-r from-primary-500/80 to-primary-500/70 border-b border-primary-500/30 rounded-t-2xl">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
+                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Level
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
+                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Job Role
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold text-dark-300 uppercase tracking-wide">
+                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Question
                   </th>
                   {user?.role === 'admin' && (
-                    <th className="px-20 py-4 text-center text-xs font-bold text-dark-300 uppercase tracking-wide">
-                      <div className="-mr-16">Actions</div>
+                    <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
+                      <div className="flex justify-end w-full pr-7">
+                        Actions
+                      </div>
                     </th>
                   )}
                 </tr>
@@ -373,7 +379,7 @@ const Questions: React.FC = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredQuestions.length > 0 ? (
                   filteredQuestions.map((question) => (
-                    <tr key={question.id} className="hover:bg-mint-50/50 transition-colors">
+                    <tr key={question.id} className="hover:bg-[#ECEFCA] transition-all">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
                         {question.level}
                       </td>
