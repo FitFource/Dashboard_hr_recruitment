@@ -143,3 +143,68 @@ export const getLevels = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Failed to fetch levels" });
   }
 };
+
+
+// USER DATA
+
+export const getMetricsUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { job_role, level, start_date, end_date } = req.query;
+
+    const result = await pool.query(`
+      SELECT 
+        COUNT(*) AS total_candidates,
+        COUNT(*) FILTER (WHERE a.status = 2) AS accepted_candidates,
+        COUNT(*) FILTER (WHERE a.status = 3) AS rejected_candidates,
+        COUNT(*) FILTER (WHERE a.status = 1) AS in_progress_candidates
+      FROM candidate_profile a
+      INNER JOIN positions p ON a.position_id = p.id
+      INNER JOIN users b 
+        ON p.position = b.position_name 
+        AND p.id < b.position_id
+      WHERE ($1::text IS NULL OR p.position = $1)
+        AND ($2::text IS NULL OR p.level = $2)
+        AND ($3::date IS NULL OR a.submit_date >= $3)
+        AND ($4::date IS NULL OR a.submit_date <= $4)
+    `, [job_role || null, level || null, start_date || null, end_date || null]);
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Error fetching overview metrics:", error);
+    res.status(500).json({ error: "Failed to fetch metrics" });
+  }
+};
+
+
+
+export const getNextInterview = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userID = (req as any).user?.id;
+
+    const result = await pool.query(`
+      SELECT 
+        s.schedule AS interview_time,
+        s.meeting_link,
+        c.name AS candidate_name,
+        p.position AS position_name,
+        p.level
+      FROM schedule_user_interview s
+      INNER JOIN candidate_profile c 
+        ON s.candidate_id = c.id
+      INNER JOIN positions p 
+        ON c.position_id = p.id
+      INNER JOIN users b 
+        ON p.position = b.position_name 
+        AND p.id < b.position_id
+      WHERE s.user_id = $1
+        AND s.schedule >= NOW()
+      ORDER BY s.schedule ASC
+      LIMIT 5;
+    `, [userID]);
+
+    res.json({ next: result.rows });
+  } catch (error) {
+    console.error("Error fetching next interview:", error);
+    res.status(500).json({ error: "Failed to fetch next interview" });
+  }
+};

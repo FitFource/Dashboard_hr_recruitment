@@ -21,3 +21,17 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.datepicker-zindex {
+  z-index: 999999 !important;
+}
+
+.react-datepicker-popper {
+  z-index: 999999 !important;
+}
+
+.datepicker-wrapper {
+  position: relative !important;
+  overflow: visible !important;
+}
+

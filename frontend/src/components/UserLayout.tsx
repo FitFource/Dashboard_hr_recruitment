@@ -1,9 +1,8 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
-  LayoutDashboard, 
+  Home, 
   Users, 
-  FileText, 
   ClipboardList, 
   LogOut,
   Menu,
@@ -12,11 +11,11 @@ import {
 import { useAuthStore } from '../store/authStore';
 import toast from 'react-hot-toast';
 
-interface LayoutProps {
+interface UserLayoutProps {
   children: React.ReactNode;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
@@ -29,16 +28,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
   
   const menuItems = [
-    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/candidates', icon: Users, label: 'Candidates' },
-    { path: '/questions', icon: FileText, label: 'Questions' },
-    { path: '/requirements', icon: ClipboardList, label: 'Requirements' },
+    { path: '/user/home', icon: Home, label: 'Home' },
+    { path: '/user/candidates', icon: Users, label: 'Candidates' },
+    { path: '/user/requirements', icon: ClipboardList, label: 'Requirements' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-background text-primary-900">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background-light to-accent/20">
       {/* Header */}
       <header className="bg-primary-900 shadow-lg border-b border-primary-800/20 fixed w-full z-10">
         <div className="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between text-background">
@@ -50,13 +48,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
             <h1 className="text-xl font-bold tracking-tight">
-              HR Recruitment Dashboard
+              User Portal
             </h1>
           </div>
           <div className="flex items-center gap-3">
             <div className="hidden sm:block bg-accent/20 backdrop-blur-sm rounded-2xl p-2 shadow-md border border-accent/40">
               <img
-                src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || "User"}&fontWeight=900&backgroundColor=547792`}
+                src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || "User"}&fontWeight=900&backgroundColor=94B4C1`}
                 alt="profile"
                 className="w-8 h-8 rounded-xl"
               />
@@ -119,4 +117,4 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   );
 };
 
-export default Layout;
+export default UserLayout;

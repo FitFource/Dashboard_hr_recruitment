@@ -78,6 +78,10 @@ const Candidates: React.FC = () => {
     }
   };
 
+  const statusOptions = React.useMemo(() => {
+    return [...new Set(candidates.map((c) => c.status_label).filter(Boolean))];
+  }, [candidates]);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Accepted':
@@ -86,6 +90,10 @@ const Candidates: React.FC = () => {
         return 'bg-red-100 text-red-800';
       case 'In Progress':
         return 'bg-yellow-100 text-yellow-800';
+      case 'User Interview':
+        return 'bg-blue-100 text-blue-800';
+      case 'Offering':
+        return 'bg-green-200 text-green-900';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -169,38 +177,105 @@ const Candidates: React.FC = () => {
     }
   };
 
-const renderDropdown = (candidate: Candidate) => {
-  if (Number(candidate.status_id) === 1) {
-    return (
-      <select 
-        value={candidate.status_id}
-        onChange={e => handleStatusChange(candidate, Number(e.target.value))}
-        className="w-24 px-3 py-1.5 rounded-2xl border border-accent/70 focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 bg-white cursor-pointer hover:bg-background/50 transition-all text-primary-900 shadow-sm"
-        title="Update candidate status"
-      >
-        <option value={1}>Open</option>
-        <option value={2}>Accepted</option>
-        <option value={3}>Rejected</option>
-      </select>
-    );
-  }
+  const renderDropdown = (candidate: Candidate) => {
+    if (Number(candidate.status_id) === 1 || Number(candidate.status_id) === 6) {
+      return (
+        <select 
+          value={candidate.status_id}
+          onChange={e => handleStatusChange(candidate, Number(e.target.value))}
+          className="w-24 px-3 py-1.5 rounded-2xl border border-accent/70 focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 bg-white cursor-pointer hover:bg-background/50 transition-all text-primary-900 shadow-sm"
+          title="Update candidate status"
+        >
+          <option value={1}>Open</option>
+          <option value={2}>Accepted</option>
+          <option value={3}>Rejected</option>
+        </select>
+      );
+    }
 
-  return (
-      <select 
-        value="closed" 
-        disabled 
-        className="w-24 px-3 py-1 rounded-xl border border-gray-300 bg-gray-100 cursor-not-allowed text-gray-500"
-        title="This candidate's status is closed and cannot be changed"
-      >
-        <option value="closed">Closed</option>
-      </select>
-    );
-};
+    if (Number(candidate.status_id) === 5) {
+       return (
+        <select 
+          value="closed" 
+          disabled 
+          className="w-24 px-3 py-1 rounded-xl border border-gray-300 bg-gray-100 cursor-not-allowed text-gray-500"
+          title="This candidate's status is closed and cannot be changed"
+        >
+          <option value="closed">Open</option>
+        </select>
+      )
+    }else{
+      return (
+        <select 
+          value="closed" 
+          disabled 
+          className="w-24 px-3 py-1 rounded-xl border border-gray-300 bg-gray-100 cursor-not-allowed text-gray-500"
+          title="This candidate's status is closed and cannot be changed"
+        >
+          <option value="closed">Closed</option>
+        </select>
+      )};
+  };
+
+  const openCVPreview = (link: string) => {
+    const fileId = link.split('/d/')[1]?.split('/')[0];
+
+    if (!fileId) {
+        toast.error("There is no CV to preview");
+        return;
+    }
+
+    MySwal.fire({
+        title: 'Curriculum Vitae',
+        html: `
+        <iframe 
+            src="https://drive.google.com/file/d/${fileId}/preview"
+            width="100%"
+            height="500px"
+            style="border:none;border-radius:12px;"
+        ></iframe>
+        `,
+        width: "60%",
+        showCloseButton: true,
+        showConfirmButton: false
+    });
+    };
+
+  const formatWIB = (dateString) => {
+    const date = new Date(dateString);
+
+    const datePart = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Jakarta",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }).format(date);
+
+    const timePart = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Jakarta",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }).format(date);
+
+    return `${datePart}, ${timePart}`;
+  };
+
+  const openSummaryModal = (text: string) => {
+    MySwal.fire({
+        title: "AI Summary",
+        html: `<p style="text-align:left">${text}</p>`,
+        width: "60%",
+        showCloseButton: true,
+        showConfirmButton: false
+    });
+    };
+
 
   return (
     <div className="space-y-6">
       {/* Filters */}
-      <div className="bg-background/95 backdrop-blur-sm rounded-3xl shadow-xl border border-accent/50 p-5">
+      <div className="bg-white/50 backdrop-blur-xl rounded-3xl shadow-lg p-8 border border-accent/30">
         <div className="flex gap-3">
           <div className="md:col-span-2">
             <div className="relative w-[31.25rem]">
@@ -223,10 +298,13 @@ const renderDropdown = (candidate: Candidate) => {
               className="w-full px-4 py-3 border border-accent/60 rounded-2xl focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 transition-all text-primary-900 hover:border-accent shadow-sm"
             >
               <option value="">All Status</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Accepted">Accepted</option>
-              <option value="Rejected">Rejected</option>
+              {statusOptions.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
             </select>
+
           </div>
           <div className="w-48">
             <select
@@ -280,7 +358,7 @@ const renderDropdown = (candidate: Candidate) => {
       </div>
 
       {/* Candidates Table */}
-      <div className="bg-background/95 backdrop-blur-sm rounded-3xl shadow-xl border border-accent/50 p-6 hover:shadow-2xl transition-all">
+      <div className="bg-white/50 backdrop-blur-xl rounded-3xl shadow-lg p-8 border border-accent/30">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="relative">
@@ -306,7 +384,13 @@ const renderDropdown = (candidate: Candidate) => {
                     Job Role
                   </th>
                   <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
+                    CV Link
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Residence
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
+                    User Interview
                   </th>
                   <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Status
@@ -315,7 +399,7 @@ const renderDropdown = (candidate: Candidate) => {
                     Score
                   </th>
                   <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
-                    Rank
+                    Summary AI
                   </th>
                   {user?.role === 'admin' && (
                     <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
@@ -341,9 +425,25 @@ const renderDropdown = (candidate: Candidate) => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
                         {candidate.position || 'N/A'}
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {candidate.cv_link ? (
+                            <button
+                            onClick={() => openCVPreview(candidate.cv_link)}
+                            className="flex items-center gap-2 text-primary-600 hover:text-primary-800 underline"
+                            >
+                            <Eye size={16}/> View CV
+                            </button>
+                        ) : (
+                            "No CV uploaded"
+                        )}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
                         {candidate.residence || 'N/A'}
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
+                        {candidate.schedule ? formatWIB(candidate.schedule) : "No Schedule"}
+                      </td>
+
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`px-3 py-1.5 inline-flex text-xs leading-5 rounded-full shadow-sm ${getStatusColor(
@@ -356,8 +456,17 @@ const renderDropdown = (candidate: Candidate) => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
                         {candidate.score || 0}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
-                        {candidate.rank || 0}
+                      <td className="px-6 py-4 text-sm text-primary-900 max-w-xs">
+                        {candidate.summary ? (
+                            <button
+                            onClick={() => openSummaryModal(candidate.summary)}
+                            className="text-left line-clamp-3 hover:underline hover:text-primary-600"
+                            >
+                            {candidate.summary}
+                            </button>
+                        ) : (
+                            'No Summary'
+                        )}
                       </td>
                       {user?.role === 'admin' && (
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
@@ -383,5 +492,3 @@ const renderDropdown = (candidate: Candidate) => {
 };
 
 export default Candidates;
-
-

@@ -24,13 +24,14 @@ const Login: React.FC = () => {
       const token = response.data.token;
       setAuth(user, token);
       toast.success('Login successful!');
-      // navigate('/');
+      
+      // Role-based redirect
       if (user.role === 'admin' || user.role === 'viewer') {
-        navigate('/Dashboard');   
+        navigate('/dashboard');   
       } else if (user.role === 'user') {
-        navigate('/HomeUser'); 
+        navigate('/user/home'); 
       } else {
-        navigate('/unauthorized'); 
+        navigate('/login'); 
       }
     } catch (error: any) {
       let message = 'Login failed';

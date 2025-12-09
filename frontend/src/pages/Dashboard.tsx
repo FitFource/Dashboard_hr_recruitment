@@ -18,6 +18,9 @@ import {
 import api from '../lib/api';
 import toast from 'react-hot-toast';
 import { MetricsOverview, TopCandidate, CandidatesByRole } from '../types';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
 
 const COLORS = ['#88B494', '#B5D8BF', '#F4A896', '#ef4444'];
 
@@ -30,8 +33,10 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [positions, setPositions] = useState<string[]>([]);
   const [roleFilter, setRoleFilter] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  // const [startDate, setStartDate] = useState('');
+  // const [endDate, setEndDate] = useState('');
+  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
+  const [startDate, endDate] = dateRange;
   const [levels, setLevels] = useState<string[]>([]);
   const [levelFilter, setLevelFilter] = useState('');
 
@@ -54,14 +59,28 @@ const Dashboard: React.FC = () => {
     return () => clearInterval(interval);
   }, [roleFilter, startDate, endDate, levelFilter]);
 
+
+  const formatDate = (date: Date | null) => {
+    if (!date) return "";
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  };
+  
   const fetchDashboardData = async (silent = false) => {
     try {
       if (!silent) setLoading(true);
       const params = new URLSearchParams();
       if (roleFilter) params.append('job_role', roleFilter);
       if (levelFilter) params.append('level', levelFilter);
-      if (startDate) params.append('start_date', startDate);
-      if (endDate) params.append('end_date', endDate);
+      // if (startDate) params.append('start_date', startDate);
+      // if (endDate) params.append('end_date', endDate);
+      if (startDate) params.append('start_date', formatDate(startDate));
+      if (endDate) params.append('end_date', formatDate(endDate));
+
 
       const [overviewRes, topCandidatesRes, byRoleRes, trendsRes] = await Promise.all([
         api.get(`/metrics/overview?${params.toString()}`, { headers: { 'Cache-Control': 'no-cache' } }),
@@ -137,8 +156,7 @@ const Dashboard: React.FC = () => {
     ? (((overview?.in_progress_candidates ?? 0) / total) * 100).toFixed(1)
     : "0";
 
-
-  return (
+   return (
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
         {/* Left: Title & subtitle */}
@@ -170,7 +188,7 @@ const Dashboard: React.FC = () => {
             ))}
           </select>
 
-          <input
+          {/* <input
             type="date"
             value={startDate}
             onChange={e => setStartDate(e.target.value)}
@@ -184,7 +202,20 @@ const Dashboard: React.FC = () => {
             value={endDate}
             onChange={e => setEndDate(e.target.value)}
             className="px-4 py-2.5 border border-accent/60 rounded-2xl text-primary-900 bg-white hover:border-primary-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/40 transition-all shadow-sm hover:shadow-md"
+          /> */}
+
+          <DatePicker
+            selectsRange
+            startDate={startDate}
+            endDate={endDate}
+            onChange={(update: [Date | null, Date | null]) => setDateRange(update)}
+            isClearable
+            placeholderText="📅 Select Apply Date"
+            className="w-full px-4 py-3 border border-accent/60 rounded-2xl"
+            dateFormat="yyyy-MM-dd"
+            popperClassName="z-[99999]"
           />
+
         </div>
       </div>
 
@@ -293,7 +324,7 @@ const Dashboard: React.FC = () => {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Bar Chart - Candidates by Role */}
-        <div className="bg-background/95 backdrop-blur-sm rounded-3xl shadow-xl border border-accent/50 p-6 hover:shadow-2xl transition-all">
+        <div className="bg-white/50 backdrop-blur-xl rounded-3xl shadow-lg p-8 border border-accent/30">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-xl font-bold text-primary-900 tracking-tight">
@@ -340,7 +371,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Pie Chart - Status Distribution */}
-        <div className="bg-background/95 backdrop-blur-sm rounded-3xl shadow-xl border border-accent/50 p-6 hover:shadow-2xl transition-all">
+        <div className="bg-white/50 backdrop-blur-xl rounded-3xl shadow-lg p-8 border border-accent/30">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-xl font-bold text-primary-900 tracking-tight">
@@ -402,7 +433,7 @@ const Dashboard: React.FC = () => {
 
       {/* Application Trends */}
       {trends.length > 0 && (
-        <div className="bg-background/95 backdrop-blur-sm rounded-3xl shadow-xl border border-accent/50 p-6 hover:shadow-2xl transition-all">
+        <div className="bg-white/50 backdrop-blur-xl rounded-3xl shadow-lg p-8 border border-accent/30">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-xl font-bold text-primary-900 tracking-tight">
@@ -526,7 +557,7 @@ const Dashboard: React.FC = () => {
 
 
       {/* Top Candidates Today */}
-      <div className="bg-background/95 backdrop-blur-sm rounded-3xl shadow-xl border border-accent/50 p-6 hover:shadow-2xl transition-all">
+      <div className="bg-white/50 backdrop-blur-xl rounded-3xl shadow-lg p-8 border border-accent/30">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-xl font-bold text-primary-900 tracking-tight">
@@ -557,9 +588,9 @@ const Dashboard: React.FC = () => {
                 <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                   Score
                 </th>
-                <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
+                {/* <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                   Rank
-                </th>
+                </th> */}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-accent/20">
@@ -610,11 +641,11 @@ const Dashboard: React.FC = () => {
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    {/* <td className="px-6 py-4 whitespace-nowrap">
                       <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-accent/50 to-accent/70 text-primary-900 shadow-sm">
                         {candidate.rank}
                       </span>
-                    </td>
+                    </td> */}
                   </tr>
                 ))
               ) : (

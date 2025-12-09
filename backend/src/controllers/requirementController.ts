@@ -28,6 +28,10 @@ const getEmbedding = (texts: string[]): Promise<number[][]> => {
   });
 };
 
+function vectorToPgArray(vec: number[]): string {
+  return `[${vec.join(",")}]`;
+}
+
 
 // -----------------------------------------------------------
 // Helper → Normalisasi Row
@@ -115,8 +119,8 @@ export const createRequirement = async (req: AuthRequest, res: Response) => {
       const updateRes = await pool.query(
         `UPDATE job_requirements
          SET requirements_text=$1,
-             requirements_vector=$2,
-             position_vector=$3,
+             requirements_vector=$2::vector,
+             position_vector=$3::vector,
              updated_date=NOW()
          WHERE id=$4
          RETURNING id, 
@@ -128,7 +132,7 @@ export const createRequirement = async (req: AuthRequest, res: Response) => {
             requirements_vector,
             created_date,
             updated_date`,
-        [requirements, requirementsVec, positionVec, existingRequirements.rows[0].id]
+        [requirements, vectorToPgArray(requirementsVec), vectorToPgArray(positionVec), existingRequirements.rows[0].id]
       );
 
       return res.json({ requirements: updateRes.rows[0] });
@@ -137,7 +141,7 @@ export const createRequirement = async (req: AuthRequest, res: Response) => {
     const insertRes = await pool.query(
       `INSERT INTO job_requirements
        (position_id, position_level, position_name, position_vector, requirements_text, requirements_vector, created_date, updated_date)
-       VALUES ($1,$2,$3,$4,$5,$6,NOW(),NOW())
+       VALUES ($1,$2,$3,$4::vector,$5,$6::vector,NOW(),NOW())
        RETURNING id, 
         position_id,
         position_level AS level,
@@ -147,7 +151,7 @@ export const createRequirement = async (req: AuthRequest, res: Response) => {
         requirements_vector,
         created_date,
         updated_date`,
-      [positionId, level, position, positionVec, requirements, requirementsVec]
+      [positionId, level, position, vectorToPgArray(positionVec), requirements, vectorToPgArray(requirementsVec)]
     );
 
     return res.status(201).json({ requirements: insertRes.rows[0] });
@@ -167,6 +171,7 @@ export const updateRequirement = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { position, level, requirements } = req.body;
+    const [requirementsVec] = await getEmbedding([requirements]);
 
     // Only requirements required
     if (!requirements) {
@@ -176,16 +181,19 @@ export const updateRequirement = async (req: AuthRequest, res: Response) => {
     // If no position/level → update requirements only
     if (!position || !level) {
       const result = await pool.query(
-        `UPDATE job_requirements
-         SET requirements_text=$1, updated_date=NOW()
-         WHERE id=$2
-         RETURNING id,
-            position_level AS level,
-            position_name AS position,
-            requirements_text AS requirements,
-            created_date,
-            updated_date`,
-        [requirements, id]
+      `UPDATE job_requirements
+      SET requirements_text=$1,
+          requirements_vector=$2::vector,
+          updated_date=NOW()
+      WHERE id=$3
+      RETURNING id,
+                position_level AS level,
+                position_name AS position,
+                requirements_text AS requirements,
+                requirements_vector,
+                created_date,
+                updated_date`,
+      [requirements, vectorToPgArray(requirementsVec), id]
       );
 
       if (!result.rows.length)
@@ -210,17 +218,16 @@ export const updateRequirement = async (req: AuthRequest, res: Response) => {
     if (!positionVec || positionVec.length === 0) {
       [positionVec] = await getEmbedding([position]);
       await pool.query(
-        `UPDATE positions SET position_vector=$1, update_date=NOW() WHERE id=$2`,
-        [positionVec, positionId]
+        `UPDATE positions SET position_vector=$1::vector, update_date=NOW() WHERE id=$2`,
+        [vectorToPgArray(positionVec), positionId]
       );
     }
 
-    const [, requirementsVec] = await getEmbedding([requirements]);
-
+    
     const result = await pool.query(
       `UPDATE job_requirements
-       SET position_id=$1, position_level=$2, position_name=$3, position_vector=$4,
-           requirements_text=$5, requirements_vector=$6, updated_date=NOW()
+       SET position_id=$1, position_level=$2, position_name=$3, position_vector=$4::vector,
+           requirements_text=$5, requirements_vector=$6::vector, updated_date=NOW()
        WHERE id=$7
        RETURNING id, 
           position_id,
@@ -231,7 +238,7 @@ export const updateRequirement = async (req: AuthRequest, res: Response) => {
           requirements_vector,
           created_date,
           updated_date`,
-      [positionId, level, position, positionVec, requirements, requirementsVec, id]
+      [positionId, level, position, vectorToPgArray(positionVec), requirements, vectorToPgArray(requirementsVec), id]
     );
 
     if (!result.rows.length)
@@ -276,6 +283,72 @@ export const getPositionsList = async (req: Request, res: Response) => {
       FROM positions 
       ORDER BY level, position
     `);
+
+    res.json(result.rows);  // Frontend expects array
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch positions" });
+  }
+};
+
+
+// -----------------------------------------------------------
+// GET ALL REQUIREMENTS USER
+// -----------------------------------------------------------
+
+export const getAllRequirementsUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { position } = req.query;
+
+    let query = `
+              SELECT 
+                a.id, 
+                a.position_level AS level,
+                a.position_name AS position,
+                a.requirements_text AS requirements,
+                a.updated_date
+              FROM job_requirements a
+              INNER JOIN users b 
+                ON a.position_name = b.position_name 
+                AND a.position_id < b.position_id
+              WHERE 1 = 1
+              `;
+
+    const params: any[] = [];
+    let idx = 1;
+
+    if (position) {
+      query += ` AND a.position_name ILIKE $${idx}`;
+      params.push(`%${position}%`);
+      idx++;
+    }
+
+    query += ' ORDER BY a.updated_date DESC';
+
+    const result = await pool.query<JobRequirement>(query, params);
+    res.json({ requirements: result.rows });
+
+  } catch (error) {
+    console.error('Error fetching requirements:', error);
+    res.status(500).json({ error: 'Failed to fetch requirements' });
+  }
+};
+
+
+
+export const getPositionsListUser = async (req: Request, res: Response) => {
+  const user_id = (req as any).user.id;
+
+  try {
+    const result = await pool.query(`
+      SELECT DISTINCT a.level, a.position 
+      FROM positions a
+      INNER JOIN users b 
+        ON a.position = b.position_name 
+        AND a.id < b.position_id
+        AND b.id = $1
+      ORDER BY a.level, a.position
+    `, [user_id]);
 
     res.json(result.rows);  // Frontend expects array
   } catch (err) {

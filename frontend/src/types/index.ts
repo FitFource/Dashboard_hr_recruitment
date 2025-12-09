@@ -18,10 +18,19 @@ export interface Candidate {
   status_id: number;
   status_label:string;
   score?: number;
+  tech_score:number,
+  soft_score:number,
   rank: number;
+  cv_link: string;
+  summary: string;
+  tech_link: string;
+  position_id:number;
+  schedule: string;
+  submit_date: String;
   created_date: string;
   updated_date: string;
 }
+
 
 export interface InterviewQuestion {
   id: number;
@@ -65,4 +74,13 @@ export interface CandidatesByRole {
   accepted: number;
   rejected: number;
   in_progress: number;
+}
+
+
+
+interface DashboardStats {
+    total_candidates: number;
+  accepted_candidates: number;
+  rejected_candidates: number;
+  in_progress_candidates: number;
 }

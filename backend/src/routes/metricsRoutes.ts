@@ -5,56 +5,27 @@ import {
   getCandidatesByRole,
   getApplicationTrends,
   getLevels,
+  getMetricsUser,
+  getNextInterview,
 } from '../controllers/metricsController';
 import { authenticateToken } from '../middleware/auth';
 
 const router = express.Router();
 
-/**
- * @swagger
- * /api/metrics/overview:
- *   get:
- *     summary: Get overview metrics (total, accepted, rejected, in progress)
- *     tags: [Metrics]
- *     security:
- *       - bearerAuth: []
- */
+
 router.get('/overview', authenticateToken, getOverviewMetrics);
-
-/**
- * @swagger
- * /api/metrics/top-candidates:
- *   get:
- *     summary: Get top 10 most processed candidates today
- *     tags: [Metrics]
- *     security:
- *       - bearerAuth: []
- */
 router.get('/top-candidates', authenticateToken, getTopCandidatesToday);
-
-/**
- * @swagger
- * /api/metrics/top-by-role:
- *   get:
- *     summary: Get top 10 candidates per job role
- *     tags: [Metrics]
- *     security:
- *       - bearerAuth: []
- */
 router.get('/top-by-role', authenticateToken, getCandidatesByRole);
 
-/**
- * @swagger
- * /api/metrics/trends:
- *   get:
- *     summary: Get application trends over time
- *     tags: [Metrics]
- *     security:
- *       - bearerAuth: []
- */
 router.get('/trends', authenticateToken, getApplicationTrends);
 
 router.get('/levels', authenticateToken, getLevels);
 
+// USER ROUTES
+router.get('/user/overview', authenticateToken, getMetricsUser);
+router.get('/user/next-interview', authenticateToken, getNextInterview);
+
+
 export default router;
+
 
