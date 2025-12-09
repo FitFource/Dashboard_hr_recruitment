@@ -18,10 +18,7 @@ export interface Candidate {
   residence: string;
   status_id: number;
   status_label:string;
-  score?: number;
-  tech_score:number,
   soft_score:number,
-  rank: number;
   cv_link: string;
   summary: string;
   tech_link: string;
@@ -67,7 +64,6 @@ export interface TopCandidate {
   job_role: string;
   status: string;
   score: number;
-  rank: number;
   last_action_date: Date;
 }
 

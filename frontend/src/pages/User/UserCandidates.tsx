@@ -632,12 +632,12 @@ const Candidates: React.FC = () => {
                   <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Residence
                   </th>
-                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
+                  {/* <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Avg Score
                   </th>
                   <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Tech Score
-                  </th>
+                  </th> */}
                   <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     SoftSkill Score
                   </th>
@@ -656,9 +656,7 @@ const Candidates: React.FC = () => {
                   <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Schedule Interview
                   </th>
-                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
-                    Ranking
-                  </th>
+                  
                   {user?.role === 'user' && (
                     <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                       <div className="mr-10">Actions</div>
@@ -700,12 +698,12 @@ const Candidates: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
                         {candidate.residence || 'Null'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
+                      {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
                         {candidate.score || 0}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
                         {candidate.tech_score || 0}
-                      </td>
+                      </td> */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
                         {candidate.soft_score || 0}
                       </td>
@@ -774,10 +772,6 @@ const Candidates: React.FC = () => {
                           className="border px-3 py-1.5 rounded-lg"
                         />
 
-                      </td>
-
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
-                        {candidate.rank || 0}
                       </td>
                       {user?.role === 'user' && (
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">

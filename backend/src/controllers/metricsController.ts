@@ -37,13 +37,13 @@ export const getTopCandidatesToday = async (req: Request, res: Response) => {
       `
       SELECT
             cp.id,
-            cp.name,
+            c.name,
             cp.email,
             p.level,
             p.position AS job_role,
             s.status,
-            cp.avg_score AS score,
-            cp.rank,
+            cp.soft_skill_score as score,
+            s.status,
             c.submit_date,
             cp.updated_date AS last_action_date
       FROM summary_candidate cp
@@ -59,7 +59,7 @@ export const getTopCandidatesToday = async (req: Request, res: Response) => {
         AND ($2::text IS NULL OR p.level = $2)
         AND ($3::date IS NULL OR c.submit_date >= $3)
         AND ($4::date IS NULL OR c.submit_date <= $4)
-      ORDER BY cp.rank ASC
+      ORDER BY cp.soft_skill_score DESC
       LIMIT $5
       `,
       [job_role || null, level || null, start_date || null, end_date || null, limit]

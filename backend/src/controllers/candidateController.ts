@@ -13,8 +13,9 @@ export const getAllCandidates = async (req: Request, res: Response): Promise<voi
                      cp.email,cp.residence,
                      cp.status AS status_id,
                      st.status AS status_label,
-                     sc.avg_score AS score, sc.rank,cp.cv_link,
+                     cp.cv_link,
                      s.schedule,
+                     sc.soft_skill_score as soft_score,
                      sc.summary_desc as summary,
                      cp.created_date,cp.updated_date
               FROM candidate_profile cp
@@ -499,10 +500,7 @@ export const getAllCandidatesUser = async (req: Request, res: Response): Promise
                      cp.email,cp.residence,
                      cp.status AS status_id,
                      st.status AS status_label,
-                     sc.avg_score AS score, 
-                     sc.technical_score AS tech_score,
                      sc.soft_skill_score AS soft_score,
-                     sc.rank,
                      cp.cv_link,
                      sc.summary_desc AS summary,
                      ps.technical_link AS tech_link,

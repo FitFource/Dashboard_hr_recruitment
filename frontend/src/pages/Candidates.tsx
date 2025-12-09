@@ -396,7 +396,7 @@ const Candidates: React.FC = () => {
                     Status
                   </th>
                   <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
-                    Score
+                    SoftSkill Score
                   </th>
                   <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Summary AI
@@ -454,7 +454,7 @@ const Candidates: React.FC = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
-                        {candidate.score || 0}
+                        {candidate.soft_score || 0}
                       </td>
                       <td className="px-6 py-4 text-sm text-primary-900 max-w-xs">
                         {candidate.summary ? (

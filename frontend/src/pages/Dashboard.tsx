@@ -586,11 +586,8 @@ const Dashboard: React.FC = () => {
                   Status
                 </th>
                 <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
-                  Score
+                  SoftSkill Score
                 </th>
-                {/* <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
-                  Rank
-                </th> */}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-accent/20">
@@ -631,7 +628,8 @@ const Dashboard: React.FC = () => {
                           <div
                             className="h-2.5 rounded-full shadow-sm"
                             style={{
-                              width: `${candidate.score || 0}%`,
+                              // Convert score 1-5 to percentage (1 = 20%, 5 = 100%)
+                              width: `${(candidate.score || 0) * 20}%`,
                               backgroundColor: '#547792',
                             }}
                           />
@@ -641,11 +639,7 @@ const Dashboard: React.FC = () => {
                         </span>
                       </div>
                     </td>
-                    {/* <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs bg-gradient-to-r from-accent/50 to-accent/70 text-primary-900 shadow-sm">
-                        {candidate.rank}
-                      </span>
-                    </td> */}
+
                   </tr>
                 ))
               ) : (
