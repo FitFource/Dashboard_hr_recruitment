@@ -38,7 +38,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-background text-primary-900">
+    <div className="min-h-screen bg-white text-primary-900">
       {/* Header */}
       <header className="bg-primary-900 shadow-lg border-b border-primary-800/20 fixed w-full z-10">
         <div className="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between text-background">

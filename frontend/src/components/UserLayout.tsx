@@ -36,7 +36,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background-light to-accent/20">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-primary-900 shadow-lg border-b border-primary-800/20 fixed w-full z-10">
         <div className="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between text-background">
@@ -48,7 +48,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
               {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
             <h1 className="text-xl font-bold tracking-tight">
-              User Portal
+              User Management Portal
             </h1>
           </div>
           <div className="flex items-center gap-3">
