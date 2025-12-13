@@ -4,6 +4,20 @@ import { Candidate} from '../types';
 import { AuthRequest } from '../middleware/auth';
 import nodemailer from 'nodemailer';
 
+export const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    secure: true, 
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+    pool: true,
+    maxConnections: 5,
+    maxMessages: 100,
+  });
+
+
 export const getAllCandidates = async (req: Request, res: Response): Promise<void> => {
   try {
     const { status, position, search, level,limit = '50', offset = '0' } = req.query;
@@ -106,40 +120,62 @@ const sendRejectionEmail = async (
   
   console.log("ENV:", process.env.SMTP_HOST, process.env.SMTP_USER);
 
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    secure: true, 
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-
-
-  // Verify SMTP connection
-  try {
-    await transporter.verify();
-  } catch (error) {
-    console.error('SMTP connection failed:', error);
-    throw new Error('Failed to connect to email server. Please check SMTP credentials.');
-  }
+ 
+  // try {
+  //   await transporter.verify();
+  // } catch (error) {
+  //   console.error('SMTP connection failed:', error);
+  //   throw new Error('Failed to connect to email server. Please check SMTP credentials.');
+  // }
 
   const mailOptions = {
     from: `"HR Team" <${process.env.SMTP_USER}>`,
     to: email,
+    cc:'hrviewer8@gmail.com',
     subject: `Application Status Update – ${level} ${position}`,
     html: `
-      <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.5;">
-        <p>Dear <strong>${name}</strong>,</p>
-        <p>Thank you for your interest in the <strong>${level} ${position}</strong> position at our company.</p>
-        <p>After careful consideration, we regret to inform you that your application for the <strong> ${level} ${position} </strong> role has not been successful at this time.</p>
-        <p>We truly appreciate the time and effort you put into your application, and we encourage you to apply for other opportunities that match your skills in the future.</p>
-        <p>Wishing you success in your career.</p>
-        <p>Best regards,<br/>
-        <strong>HR Team</strong></p>
+      <div style="background-color: #f3f4f6; padding: 40px 16px; font-family: 'Segoe UI', Arial, sans-serif;">
+        <div style="max-width: 640px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+          
+          <!-- Header / Logo -->
+          <div style="padding: 24px 32px; border-bottom: 1px solid #e5e7eb; text-align: center; background-color: #ffffff;">
+            <img src="cid:bithealthlogo" alt="BitHealth Logo" width="350" style="display:block; margin:0 auto;"/>
+          </div>
+
+          <!-- Content -->
+          <div style="padding: 32px; color: #2b2b2b; line-height: 1.7;">
+            <p>Dear <strong>${name}</strong>,</p>
+
+            <p>Thank you for your interest in the <strong>${level} ${position}</strong> position at 
+              <strong>BitHealth</strong>, and for taking the time to participate in our recruitment process.</p>
+
+            <p style="font-weight: 600; color: #1f2937;">
+              After careful consideration, we regret to inform you that your application for the 
+              <strong>${level} ${position}</strong> role will not be progressed further at this stage.
+            </p>
+
+            <p>We appreciate the time and effort you invested in the selection process. 
+              This decision was made after careful evaluation, as we received applications from many qualified candidates.</p>
+
+            <p>We encourage you to consider future opportunities at BitHealth that may better align with your experience and qualifications.</p>
+
+            <p>We wish you continued success in your professional endeavors.</p>
+
+            <p>Kind regards,<br/>
+              <strong>Human Resources Team</strong><br/>
+              <span style="color: #6b7280;">BitHealth</span>
+            </p>
+          </div>
+        </div>
       </div>
     `,
+    attachments: [
+      {
+        filename: 'logo_bithealth.png',
+        path: './logo_bithealth.png',
+        cid: 'bithealthlogo', 
+      },
+    ],
   };
 
   await transporter.sendMail(mailOptions);
@@ -151,7 +187,6 @@ const sendScheduleEmail = async (
   name: string,
   level: string,
   position: string,
-  googleMeetLink: string,
   schedule: string,
   ccUser: string,
   type: "create" | "update" = "create"
@@ -160,19 +195,19 @@ const sendScheduleEmail = async (
     throw new Error('SMTP configuration is missing. Please check your .env file.');
   }
 
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    secure: true,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
+  // const transporter = nodemailer.createTransport({
+  //   host: process.env.SMTP_HOST,
+  //   port: Number(process.env.SMTP_PORT),
+  //   secure: true,
+  //   auth: {
+  //     user: process.env.SMTP_USER,
+  //     pass: process.env.SMTP_PASS,
+  //   },
+  // });
 
-  await transporter.verify();
+  // await transporter.verify();
 
-  const ccManual = ["siska.andriani@bithealth.co.id"];
+  const ccManual = ["hrviewer8@gmail.com"];
   const ccList = [
     ccUser,
     ...ccManual
@@ -195,68 +230,118 @@ const sendScheduleEmail = async (
 
   if (type === "create") {
     subject=    `Interview Schedule – ${level} ${position}`;
-    htmlBody= `
-      <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
-      <p>Dear <strong>${name}</strong>,</p>
+    htmlBody = `
+      <div style="background-color: #f3f4f6; padding: 40px 16px; font-family: 'Segoe UI', Arial, sans-serif;">
+        <div style="max-width: 640px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden;">
 
-      <p><strong>Congratulations!</strong></p>
+          <!-- Header / Logo -->
+          <div style="padding: 24px 32px; border-bottom: 1px solid #e5e7eb; text-align: center; background-color: #ffffff;">
+            <img src="cid:bithealthlogo" alt="BitHealth Logo" width="350" style="display:block; margin:0 auto;"/>
+          </div>
 
-      <p>
-        We are pleased to inform you that you have progressed to the next stage 
-        of our selection process for the 
-        <strong>${level} ${position}</strong> position.
-      </p>
+          <!-- Content -->
+          <div style="padding: 32px; color: #1f2937; line-height: 1.7;">
+            <p style="font-size: 16px;">Dear <strong>${name}</strong>,</p>
 
-      <p>Your interview details are as follows:</p>
+            <p style="font-size: 18px; font-weight: 600; color: #111827; margin-top: 16px;">
+              🎉 Congratulations!
+            </p>
 
-      <div style="padding: 12px; background: #f3f3f3; border-radius: 8px;">
-          <p><strong>Date & Time:</strong><br/>${formatToWIB(schedule)}</p>
-          <p><strong>Google Meet Link:</strong><br/>
-            <a href="${googleMeetLink}" target="_blank">${googleMeetLink}</a>
-          </p>
+            <p style="font-size: 16px; margin-top: 12px;">
+              We are excited to inform you that you have progressed to the next stage 
+              of our selection process for the 
+              <strong>${level} ${position}</strong> position at <strong>BitHealth</strong>.
+            </p>
+
+            <p style="font-size: 16px; margin-top: 12px;">Your interview details are as follows:</p>
+
+            <div style="padding: 24px; background: #eef2ff; border-radius: 12px; margin-top: 16px; border: 1px solid #c7d2fe; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+              <p style="margin: 8px 0; font-size: 16px;">
+                <strong>📅 Date & Time:</strong><br/>
+                ${formatToWIB(schedule)}
+              </p>
+              <p style="margin: 8px 0; font-size: 16px;">
+                <strong>🔗 Google Meet Link:</strong><br/>
+                <a href="https://teams.live.com/meet/9324593924800?p=OJpmepJhCWJ9wnvm9n" target="_blank" style="color: #4f46e5; text-decoration: none; font-weight: 500;">Join Meeting</a>
+              </p>
+              <p style="margin: 8px 0; font-size: 16px;">
+                <strong>🆔 Meeting ID:</strong> 932 459 392 480 0<br/>
+                <strong>Passcode:</strong> 9pK98F
+              </p>
+            </div>
+
+
+            <p style="margin-top: 16px; font-size: 16px;">
+              Please ensure your availability at the scheduled time.  
+              Should you need to reschedule, kindly notify us as soon as possible.
+            </p>
+
+            <p style="margin-top: 24px; font-size: 16px;">
+              We look forward to speaking with you.<br/><br/>
+              Best regards,<br/>
+              <strong>Human Resources Team</strong><br/>
+              <span style="color: #6b7280;">BitHealth</span>
+            </p>
+          </div>
+        </div>
       </div>
+      `;
 
-      <p>
-        Please ensure your availability at the scheduled time.  
-        Should you need to reschedule, kindly notify us as soon as possible.
-      </p>
-
-      <p>
-        We look forward to speaking with you.<br/><br/>
-        Best regards,<br/>
-        <strong>HR Team</strong>
-      </p>
-    </div>
-    `;
   }else if (type === "update") {
     subject= `Update Interview Schedule – ${level} ${position}`;
-    htmlBody= `
-      <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
-        <p>Dear <strong>${name}</strong>,</p>
+    htmlBody = `
+      <div style="background-color: #f3f4f6; padding: 40px 16px; font-family: 'Segoe UI', Arial, sans-serif;">
+        <div style="max-width: 640px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden;">
 
-        <p>We would like to inform you regarding rescheduling of your interview for the 
-          <strong>${level} ${position}</strong> position.</p>
+          <!-- Header / Logo -->
+          <div style="padding: 24px 32px; border-bottom: 1px solid #e5e7eb; text-align: center; background-color: #ffffff;">
+            <img src="cid:bithealthlogo" alt="BitHealth Logo" width="350" style="display:block; margin:0 auto;"/>
+          </div>
 
-        <p>Update interview details are as follows:</p>
+          <!-- Content -->
+          <div style="padding: 32px; color: #1f2937; line-height: 1.7;">
+            <p style="font-size: 16px;">Dear <strong>${name}</strong>,</p>
 
-        <div style="padding: 12px; background: #f3f3f3; border-radius: 8px;">
-            <p><strong>Date & Time:</strong><br/>${formatToWIB(schedule)}</p>
-            <p><strong>Google Meet Link:</strong><br/>
-              <a href="${googleMeetLink}" target="_blank">${googleMeetLink}</a>
+            <p style="font-size: 18px; font-weight: 600; color: #111827; margin-top: 16px;">
+              🔄 Interview Rescheduled
             </p>
+
+            <p style="font-size: 16px; margin-top: 12px;">
+              We would like to inform you regarding the rescheduling of your interview for the 
+              <strong>${level} ${position}</strong> position at <strong>BitHealth</strong>.
+            </p>
+
+            <p style="font-size: 16px; margin-top: 12px;">Updated interview details are as follows:</p>
+
+            <div style="padding: 24px; background: #eef2ff; border-radius: 12px; margin-top: 16px; border: 1px solid #c7d2fe; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+              <p style="margin: 8px 0; font-size: 16px;">
+                <strong>📅 Date & Time:</strong><br/>
+                ${formatToWIB(schedule)}
+              </p>
+              <p style="margin: 8px 0; font-size: 16px;">
+                <strong>🔗 Google Meet Link:</strong><br/>
+                <a href="https://teams.live.com/meet/9324593924800?p=OJpmepJhCWJ9wnvm9n" target="_blank" style="color: #4f46e5; text-decoration: none; font-weight: 500;">Join Meeting</a>
+              </p>
+              <p style="margin: 8px 0; font-size: 16px;">
+                <strong>🆔 Meeting ID:</strong> 932 459 392 480 0<br/>
+                <strong>Passcode:</strong> 9pK98F
+              </p>
+            </div>
+
+            <p style="margin-top: 16px; font-size: 16px;">
+              Please ensure your availability at the scheduled time. If you need to reschedule, kindly notify us as soon as possible.
+            </p>
+
+            <p style="margin-top: 24px; font-size: 16px;">
+              We appreciate your confirmation and look forward to speaking with you.<br/><br/>
+              Best regards,<br/>
+              <strong>Human Resources Team</strong><br/>
+              <span style="color: #6b7280;">BitHealth</span>
+            </p>
+          </div>
         </div>
-
-        <p>
-          Please make sure to be available at the scheduled time. If you need to reschedule, kindly notify us as soon as possible.
-        </p>
-
-        <p>
-          We appreciate your confirmation and look forward to speaking with you.<br/><br/>
-          Best regards,<br/>
-          <strong>HR Team</strong>
-        </p>
       </div>
-    `;
+      `;
   }
 
   const mailOptions = {
@@ -264,7 +349,14 @@ const sendScheduleEmail = async (
     to: email,
     cc: ccList.length > 0 ? ccList.join(", ") : undefined, 
     subject,
-    html: htmlBody
+    html: htmlBody,
+    attachments: [
+      {
+        filename: 'logo_bithealth.png',
+        path: './logo_bithealth.png',
+        cid: 'bithealthlogo', 
+      },
+    ],
   };
   await transporter.sendMail(mailOptions);
 };
@@ -282,54 +374,81 @@ export const sendPassedCandidateEmail = async (
     throw new Error('SMTP configuration is missing. Please check your .env file.');
   }
 
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    secure: true,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
+  // const transporter = nodemailer.createTransport({
+  //   host: process.env.SMTP_HOST,
+  //   port: Number(process.env.SMTP_PORT),
+  //   secure: true,
+  //   auth: {
+  //     user: process.env.SMTP_USER,
+  //     pass: process.env.SMTP_PASS,
+  //   },
+  // });
 
-  try {
-    await transporter.verify();
-    console.log("SMTP Connected ✅");
-  } catch (err) {
-    console.error("SMTP Verification Failed ❌", err);
-    throw err;
-  }
+  // try {
+  //   await transporter.verify();
+  //   console.log("SMTP Connected ✅");
+  // } catch (err) {
+  //   console.error("SMTP Verification Failed ❌", err);
+  //   throw err;
+  // }
 
   // CC manual
-  const ccManual = [""];
+  const ccManual = ["hrviewer8@gmail.com"];
   const ccList = [ccUser, ...ccManual].filter(Boolean);
 
   // Subject & HTML email
   const subject = `USER INTERVIEW FEEDBACK – ${candidateName} (${level} ${position})`;
   const html = `
-    <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.5;">
-      <p>Dear HR Team,</p>
+    <div style="background-color: #f3f4f6; padding: 40px 16px; font-family: 'Segoe UI', Arial, sans-serif;">
+      <div style="max-width: 640px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
 
-      <p>We would like to inform you that the candidate <strong>${candidateName}</strong> 
-      for the <strong>${level} ${position}</strong> position has <strong> PASSED </strong> to the next stage of the selection process.</p>
+        <!-- Header -->
+        <div style="padding: 24px 32px; border-bottom: 1px solid #e5e7eb; text-align: center;">
+          <img src="cid:bithealthlogo" alt="BitHealth Logo" width="350" style="display:block; margin:0 auto;"/>
+        </div>
 
-      <p><strong>User Feedback:</strong></p>  
-      <div style="padding: 10px; background: #f3f3f3; border-radius: 6px;">
-        ${feedback}
+        <!-- Content -->
+        <div style="padding: 32px; color: #1f2937; line-height: 1.7;">
+          <p style="font-size: 16px;">Dear HR Team,</p>
+
+          <p style="font-size: 16px; margin-top: 12px;">
+            We would like to inform you that the candidate <strong>${candidateName}</strong> 
+            for the <strong>${level} ${position}</strong> position has <strong>✅ PASSED</strong> to the next stage of the selection process.
+          </p>
+
+          <p style="font-size: 16px; margin-top: 12px;"><strong>User Feedback:</strong></p>  
+          <div style="padding: 16px; background: #eef2ff; border-radius: 10px; border: 1px solid #c7d2fe; font-size: 15px; margin-top: 6px;">
+            ${feedback}
+          </div>
+
+          <p style="font-size: 16px; margin-top: 16px;">
+            Please review and continue with the next steps of the recruitment process.
+          </p>
+
+          <p style="font-size: 16px; margin-top: 24px;">
+            Best regards,<br/>
+            <strong>User ${position}</strong><br/>
+            <span style="color: #6b7280;">BitHealth</span>
+          </p>
+        </div>
       </div>
-
-      <p>Please review and continue with the next steps of the recruitment process.</p>
-
-      <p>Best regards,<br/><strong>User ${position}</strong></p>
     </div>
-  `;
+    `;
+
 
   const mailOptions = {
     from: `"HR Team" <${process.env.SMTP_USER}>`,
     to: hrEmail,
     cc: ccList.join(", "),
     subject,
-    html
+    html,
+    attachments: [
+      {
+        filename: 'logo_bithealth.png',
+        path: './logo_bithealth.png',
+        cid: 'bithealthlogo', 
+      },
+    ],
   };
 
   try {
@@ -372,7 +491,8 @@ export const updateCandidateStatus = async (req: AuthRequest, res: Response) => 
     if (
       !(
         (candidate.status == 1 && [2, 3, 5].includes(newStatusNum)) ||
-        (candidate.status == 5 && [3, 6].includes(newStatusNum))
+        (candidate.status == 5 && [3, 6].includes(newStatusNum)) ||
+        (candidate.status == 6 && [3, 2].includes(newStatusNum))
       )
     ) {
       return res.status(400).json({
@@ -398,8 +518,7 @@ export const updateCandidateStatus = async (req: AuthRequest, res: Response) => 
       }
     }
 
-    const googleMeetLink = `https://meet.google.com/${Math.random().toString(36).substring(2, 6)}-${Math.random().toString(36).substring(2, 6)}-${Math.random().toString(36).substring(2, 6)}`;
-
+    
     // Update status
     const updateResult = await pool.query(
       `UPDATE candidate_profile
@@ -412,7 +531,7 @@ export const updateCandidateStatus = async (req: AuthRequest, res: Response) => 
     // Send rejection email if status is Rejected
     if (newStatusNum === 3) {
       try {
-        await sendRejectionEmail(
+        sendRejectionEmail(
           candidate.email, 
           candidate.name, 
           candidate.level, 
@@ -440,12 +559,11 @@ export const updateCandidateStatus = async (req: AuthRequest, res: Response) => 
     // Send interview schedule email when status = 5
     if (newStatusNum === 5) {
       try {
-        await sendScheduleEmail(
+        sendScheduleEmail(
           candidate.email,
           candidate.name,
           candidate.level,
           candidate.position,
-          googleMeetLink,
           schedule,
           req.user!.email,
           "create"
@@ -459,8 +577,8 @@ export const updateCandidateStatus = async (req: AuthRequest, res: Response) => 
 
     if (newStatusNum === 6) {
       try {
-        await sendPassedCandidateEmail(
-          "siska.andriani@bithealth.co.id",
+        sendPassedCandidateEmail(
+          "hrviewer8@gmail.com",
           req.user!.email,
           candidate.name,
           candidate.level,
@@ -668,14 +786,12 @@ export const upsertSchedule = async (req: Request, res: Response): Promise<void>
       );
       const candidate = candidateRes.rows[0];
 
-      const googleMeetLink = `https://meet.google.com/${Math.random().toString(36).substring(2, 6)}-${Math.random().toString(36).substring(2, 6)}-${Math.random().toString(36).substring(2, 6)}`;
       try {
         await sendScheduleEmail(
           candidate.email,
           candidate.name,
           candidate.level,
           candidate.position,
-          googleMeetLink,
           schedule,
           userEmail,
           "update"
@@ -717,3 +833,4 @@ export const upsertSchedule = async (req: Request, res: Response): Promise<void>
     res.status(500).json({ error: "Failed to upsert schedule" });
   }
 };
+

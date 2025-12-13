@@ -114,7 +114,7 @@ const Candidates: React.FC = () => {
 
   // Update Status
   const handleStatusChange = async (candidate: Candidate, value: number) => {
-    if (Number(candidate.status_id) !== 1){
+    if (Number(candidate.status_id) !== 1 && value === 6){
       toast.error("Can only update 'In Progress' candidates");
       return;
     }
@@ -218,27 +218,37 @@ const Candidates: React.FC = () => {
   };
 
   const openCVPreview = (link: string) => {
-    const fileId = link.split('/d/')[1]?.split('/')[0];
+      let fileId = null;
 
-    if (!fileId) {
+      // Format: https://drive.google.com/file/d/<id>/view
+      if (link.includes('/d/')) {
+        fileId = link.split('/d/')[1]?.split('/')[0];
+      }
+      
+      // Format: https://drive.google.com/open?id=<id>
+      else if (link.includes('open?id=')) {
+        fileId = link.split('open?id=')[1];
+      }
+
+      if (!fileId) {
         toast.error("There is no CV to preview");
         return;
-    }
+      }
 
-    MySwal.fire({
+      MySwal.fire({
         title: 'Curriculum Vitae',
         html: `
-        <iframe 
+          <iframe 
             src="https://drive.google.com/file/d/${fileId}/preview"
             width="100%"
             height="500px"
             style="border:none;border-radius:12px;"
-        ></iframe>
+          ></iframe>
         `,
         width: "60%",
         showCloseButton: true,
         showConfirmButton: false
-    });
+      });
     };
 
   const formatWIB = (dateString) => {

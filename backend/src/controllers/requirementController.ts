@@ -112,27 +112,22 @@ export const createRequirement = async (req: AuthRequest, res: Response) => {
     );
 
     // 3️⃣ Generate embedding untuk position & requirements
-    const [positionVec, requirementsVec] = await getEmbedding([position, requirements]);
+    // const [positionVec, requirementsVec] = await getEmbedding([position, requirements]);
 
     // 4️⃣ Jika requirements sudah ada → UPDATE
     if (existingRequirements.rows.length > 0) {
       const updateRes = await pool.query(
         `UPDATE job_requirements
          SET requirements_text=$1,
-             requirements_vector=$2::vector,
-             position_vector=$3::vector,
              updated_date=NOW()
-         WHERE id=$4
+         WHERE id=$2
          RETURNING id, 
             position_id,
             position_level AS level,
             position_name AS position,
-            position_vector,
             requirements_text AS requirements,
-            requirements_vector,
-            created_date,
             updated_date`,
-        [requirements, vectorToPgArray(requirementsVec), vectorToPgArray(positionVec), existingRequirements.rows[0].id]
+        [requirements, existingRequirements.rows[0].id]
       );
 
       return res.json({ requirements: updateRes.rows[0] });
@@ -140,18 +135,16 @@ export const createRequirement = async (req: AuthRequest, res: Response) => {
 
     const insertRes = await pool.query(
       `INSERT INTO job_requirements
-       (position_id, position_level, position_name, position_vector, requirements_text, requirements_vector, created_date, updated_date)
-       VALUES ($1,$2,$3,$4::vector,$5,$6::vector,NOW(),NOW())
+       (position_id, position_level, position_name, requirements_text, created_date, updated_date)
+       VALUES ($1,$2,$3,$4,NOW(),NOW())
        RETURNING id, 
         position_id,
         position_level AS level,
         position_name AS position,
-        position_vector,
         requirements_text AS requirements,
-        requirements_vector,
         created_date,
         updated_date`,
-      [positionId, level, position, vectorToPgArray(positionVec), requirements, vectorToPgArray(requirementsVec)]
+      [positionId, level, position, requirements,]
     );
 
     return res.status(201).json({ requirements: insertRes.rows[0] });
@@ -171,7 +164,7 @@ export const updateRequirement = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { position, level, requirements } = req.body;
-    const [requirementsVec] = await getEmbedding([requirements]);
+    // const [requirementsVec] = await getEmbedding([requirements]);
 
     // Only requirements required
     if (!requirements) {
@@ -183,17 +176,15 @@ export const updateRequirement = async (req: AuthRequest, res: Response) => {
       const result = await pool.query(
       `UPDATE job_requirements
       SET requirements_text=$1,
-          requirements_vector=$2::vector,
           updated_date=NOW()
-      WHERE id=$3
+      WHERE id=$2
       RETURNING id,
                 position_level AS level,
                 position_name AS position,
                 requirements_text AS requirements,
-                requirements_vector,
                 created_date,
                 updated_date`,
-      [requirements, vectorToPgArray(requirementsVec), id]
+      [requirements, id]
       );
 
       if (!result.rows.length)
@@ -213,32 +204,30 @@ export const updateRequirement = async (req: AuthRequest, res: Response) => {
     }
 
     let positionId = posRes.rows[0].id;
-    let positionVec = posRes.rows[0].position_vector;
+    // let positionVec = posRes.rows[0].position_vector;
 
-    if (!positionVec || positionVec.length === 0) {
-      [positionVec] = await getEmbedding([position]);
-      await pool.query(
-        `UPDATE positions SET position_vector=$1::vector, update_date=NOW() WHERE id=$2`,
-        [vectorToPgArray(positionVec), positionId]
-      );
-    }
+    // if (!positionVec || positionVec.length === 0) {
+    //   [positionVec] = await getEmbedding([position]);
+    //   await pool.query(
+    //     `UPDATE positions SET position_vector=$1::vector, update_date=NOW() WHERE id=$2`,
+    //     [vectorToPgArray(positionVec), positionId]
+    //   );
+    // }
 
     
     const result = await pool.query(
       `UPDATE job_requirements
-       SET position_id=$1, position_level=$2, position_name=$3, position_vector=$4::vector,
-           requirements_text=$5, requirements_vector=$6::vector, updated_date=NOW()
+       SET position_id=$1, position_level=$2, position_name=$3,
+           requirements_text=$4, updated_date=NOW()
        WHERE id=$7
        RETURNING id, 
           position_id,
           position_level AS level,
           position_name AS position,
-          position_vector,
           requirements_text AS requirements,
-          requirements_vector,
           created_date,
           updated_date`,
-      [positionId, level, position, vectorToPgArray(positionVec), requirements, vectorToPgArray(requirementsVec), id]
+      [positionId, level, position, requirements, id]
     );
 
     if (!result.rows.length)

@@ -54,7 +54,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </h1>
           </div>
           <div className="flex items-center gap-3">
-            <div className="hidden sm:block bg-accent/20 backdrop-blur-sm rounded-2xl p-2 shadow-md border border-accent/40">
+            <div className="hidden sm:block bg-white/10 backdrop-blur-sm rounded-2xl p-2 shadow-md border border-white/200">
               <img
                 src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || "User"}&fontWeight=900&backgroundColor=547792`}
                 alt="profile"

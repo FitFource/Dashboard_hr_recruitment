@@ -210,6 +210,7 @@ const Requirements: React.FC = () => {
     }
   };
 
+  const uniqueLevels = Array.from(new Set(requirements.map(q => q.level)));
   const uniqueRoles = Array.from(new Set(requirements.map(q => q.position)));
   const filteredRequirements = requirements.filter(q =>
     (roleFilter ? q.position === roleFilter : true) &&
@@ -232,7 +233,7 @@ const Requirements: React.FC = () => {
               className="px-3 py-1 border rounded w-40"
             >
               <option value="">All Levels</option>
-              {levels.map(lvl => (
+              {uniqueLevels.map(lvl => (
                 <option key={lvl} value={lvl}>{lvl}</option>
               ))}
             </select>

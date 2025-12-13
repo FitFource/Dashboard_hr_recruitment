@@ -211,7 +211,7 @@ const Questions: React.FC = () => {
     }
   };
 
-
+  const uniqueLevels = Array.from(new Set(questions.map(q => q.level)));
   const uniqueRoles = Array.from(new Set(questions.map(q => q.position)));
   const filteredQuestions = questions.filter(q =>
     (roleFilter ? q.position === roleFilter : true) &&
@@ -236,7 +236,7 @@ const Questions: React.FC = () => {
               className="px-3 py-1 border rounded w-40"
             >
               <option value="">All Levels</option>
-              {levels.map(lvl => (
+              {uniqueLevels.map(lvl => (
                 <option key={lvl} value={lvl}>{lvl}</option>
               ))}
             </select>
@@ -312,7 +312,10 @@ const Questions: React.FC = () => {
               onChange={(e) => setForm({ ...form, question_text: e.target.value })}
               className="w-full mt-1 border rounded-lg px-3 py-2 resize-y"
               rows={5}
-              placeholder="Enter the question here"
+              placeholder="Enter the question here with numbered order
+Example :
+1. Apakah kamu memiliki kemampuan komunikasi?
+2. Skill apa yang kamu miliki?"
             />
           </div>
 
@@ -386,15 +389,6 @@ const Questions: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-300">
                         {question.position}
                       </td>
-                      {/* <td className="px-6 py-4 text-sm text-gray-900 max-w-md whitespace-pre-line leading-relaxed">
-                        {((typeof question.question === "string" ? question.question : "").includes("?")
-                          ? question.question.split(/(?<=\?)/)     
-                          : question.question.split(/(?<=,)/)    
-                        )
-                          .map((part) => part.trim())
-                          .filter((part) => part.length > 0)
-                          .join("\n")}
-                      </td> */}
                       <td className="px-6 py-4 text-sm text-dark-300 max-w-md whitespace-pre-line leading-relaxed">
                         {(typeof question.question === "string" ? question.question : "")}
                       </td>

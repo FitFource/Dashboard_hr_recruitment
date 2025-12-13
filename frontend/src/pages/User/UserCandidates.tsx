@@ -415,97 +415,128 @@ const Candidates: React.FC = () => {
 
 
     const openCVPreview = (link: string) => {
-      const fileId = link.split('/d/')[1]?.split('/')[0];
+      let fileId = null;
+
+      // Format: https://drive.google.com/file/d/<id>/view
+      if (link.includes('/d/')) {
+        fileId = link.split('/d/')[1]?.split('/')[0];
+      }
+      
+      // Format: https://drive.google.com/open?id=<id>
+      else if (link.includes('open?id=')) {
+        fileId = link.split('open?id=')[1];
+      }
 
       if (!fileId) {
-          toast.error("There is no CV to preview");
-          return;
+        toast.error("There is no CV to preview");
+        return;
       }
 
       MySwal.fire({
-          title: 'Curriculum Vitae',
-          html: `
+        title: 'Curriculum Vitae',
+        html: `
           <iframe 
-              src="https://drive.google.com/file/d/${fileId}/preview"
-              width="100%"
-              height="500px"
-              style="border:none;border-radius:12px;"
+            src="https://drive.google.com/file/d/${fileId}/preview"
+            width="100%"
+            height="500px"
+            style="border:none;border-radius:12px;"
           ></iframe>
-          `,
-          width: "60%",
-          showCloseButton: true,
-          showConfirmButton: false
-      });
-    };
-
-    const openSummaryModal = (text: string) => {
-    MySwal.fire({
-        title: "AI Summary",
-        html: `<p style="text-align:left">${text}</p>`,
+        `,
         width: "60%",
         showCloseButton: true,
         showConfirmButton: false
-    });
+      });
     };
 
+  const openInterviewHistory = async (candidateId: number, positionId: number) => {
+  try {
+    const res = await api.get(
+      `/candidates/interview/latest/${candidateId}/${positionId}`
+    );
 
-    const openInterviewHistory = async (candidateId: number, positionId: number) => {
-        try {
-            const res = await api.get(`/candidates/interview/latest/${candidateId}/${positionId}`);
+    console.log("RAW RESPONSE:", res.data);
 
-            const messages = res.data?.messages;
+    const records = res.data?.messages || [];
 
-            if (!messages || messages.length === 0) {
-            toast.error("No interview history found");
-            return;
-            }
+    if (!Array.isArray(records) || records.length === 0) {
+      toast.error("No interview history found");
+      return;
+    }
 
-            const chatUI = messages.map((m: any, index: number) => {
-            const isAI = index % 2 === 0;
+    const escapeHTML = (str: string) =>
+      str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 
-            return `
-                <div style="text-align:${isAI ? "left" : "right"}; margin:10px 0;">
-                <div style="
-                display:inline-block;
-                padding:10px 14px;
-                border-radius:18px;
-                max-width:70%;
-                background:${isAI ? "#f1f5f9" : "#4f46e5"};
-                color:${isAI ? "#111" : "#fff"};
-                font-size:14px;
-                font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-                'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
-                ">
-                    ${m.chat_history}
-                </div>
-                </div>
-            `;
-            }).join("");
+    let chatUI = "";
+
+    records.forEach((record: any) => {
+      if (!record.chat_history) return;
+
+      // 🔥 PARSE chat_history (STRING → ARRAY)
+      const chats = JSON.parse(record.chat_history);
+
+      chats.forEach((chat: any) => {
+        chatUI += `
+          <!-- QUESTION -->
+          <div style="text-align:left; margin:10px 0;">
+            <div style="
+              display:inline-block;
+              padding:10px 14px;
+              border-radius:18px;
+              max-width:70%;
+              background:#f1f5f9;
+            ">
+              <strong>Question:</strong><br/>
+              ${escapeHTML(chat.question || "-")}
+            </div>
+          </div>
+
+          <!-- ANSWER -->
+          <div style="text-align:right; margin:10px 0;">
+            <div style="
+              display:inline-block;
+              padding:10px 14px;
+              border-radius:18px;
+              max-width:70%;
+              background:#4f46e5;
+              color:#fff;
+            ">
+              <strong>Answer:</strong><br/>
+              ${
+                !chat.answer || chat.answer === "[Tidak ada jawaban terdeteksi]"
+                  ? "<i>No answer detected</i>"
+                  : escapeHTML(chat.answer)
+              }
+            </div>
+          </div>
+        `;
+      });
+    });
+
+    MySwal.fire({
+      title: "Interview History",
+      html: `
+        <div style="max-height:500px; overflow:auto;">
+          ${chatUI}
+        </div>
+      `,
+      width: "60%",
+      showCloseButton: true,
+      showConfirmButton: false
+    });
+
+  } catch (error) {
+    console.error(error);
+    toast.error("There is no data interview history");
+  }
+};
 
 
-            MySwal.fire({
-            title: `Interview History`,
-            html: `
-                <div style="
-                max-height:500px;
-                overflow:auto;
-                padding:8px;
-                background:#ffffff;
-                border-radius:10px;
-                ">
-                ${chatUI}
-                </div>
-            `,
-            width: "60%",
-            showCloseButton: true,
-            showConfirmButton: false
-            });
 
-        } catch (error: any) {
-            console.error("ERROR:", error);
-            toast.error("There is no data interview history");
-        }
-        };
 
   const statusOptions = React.useMemo(() => {
       return [...new Set(candidates.map((c) => c.status_label).filter(Boolean))];

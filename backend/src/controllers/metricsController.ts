@@ -54,7 +54,7 @@ export const getTopCandidatesToday = async (req: Request, res: Response) => {
         ON cp.position_id = p.id
       INNER JOIN status s
         ON c.status = s.id
-      WHERE c.status = 1
+      WHERE c.status in (1,5)
         AND ($1::text IS NULL OR p.position = $1)
         AND ($2::text IS NULL OR p.level = $2)
         AND ($3::date IS NULL OR c.submit_date >= $3)
@@ -184,7 +184,7 @@ export const getNextInterview = async (req: Request, res: Response): Promise<voi
     const result = await pool.query(`
       SELECT 
         s.schedule AS interview_time,
-        s.meeting_link,
+        'https://teams.live.com/meet/9324593924800?p=OJpmepJhCWJ9wnvm9n' as meeting_link,
         c.name AS candidate_name,
         p.position AS position_name,
         p.level
