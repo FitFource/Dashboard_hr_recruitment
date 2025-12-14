@@ -77,7 +77,7 @@ export interface CandidatesByRole {
 
 
 interface DashboardStats {
-    total_candidates: number;
+  total_candidates: number;
   accepted_candidates: number;
   rejected_candidates: number;
   in_progress_candidates: number;

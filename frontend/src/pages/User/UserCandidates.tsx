@@ -448,38 +448,121 @@ const Candidates: React.FC = () => {
       });
     };
 
+//   const openInterviewHistory = async (candidateId: number, positionId: number) => {
+//   try {
+//     const res = await api.get(
+//       `/candidates/interview/latest/${candidateId}/${positionId}`
+//     );
+
+//     console.log("RAW RESPONSE:", res.data);
+
+//     const records = res.data?.messages || [];
+
+//     if (!Array.isArray(records) || records.length === 0) {
+//       toast.error("No interview history found");
+//       return;
+//     }
+
+//     const escapeHTML = (str: string) =>
+//       str
+//         .replace(/&/g, "&amp;")
+//         .replace(/</g, "&lt;")
+//         .replace(/>/g, "&gt;")
+//         .replace(/"/g, "&quot;")
+//         .replace(/'/g, "&#039;");
+
+//     let chatUI = "";
+
+//     records.forEach((record: any) => {
+//       if (!record.chat_history) return;
+
+//       // 🔥 PARSE chat_history (STRING → ARRAY)
+//       const chats = JSON.parse(record.chat_history);
+
+//       chats.forEach((chat: any) => {
+//         chatUI += `
+//           <!-- QUESTION -->
+//           <div style="text-align:left; margin:10px 0;">
+//             <div style="
+//               display:inline-block;
+//               padding:10px 14px;
+//               border-radius:18px;
+//               max-width:70%;
+//               background:#f1f5f9;
+//             ">
+//               <strong>Question:</strong><br/>
+//               ${escapeHTML(chat.question || "-")}
+//             </div>
+//           </div>
+
+//           <!-- ANSWER -->
+//           <div style="text-align:right; margin:10px 0;">
+//             <div style="
+//               display:inline-block;
+//               padding:10px 14px;
+//               border-radius:18px;
+//               max-width:70%;
+//               background:#4f46e5;
+//               color:#fff;
+//             ">
+//               <strong>Answer:</strong><br/>
+//               ${
+//                 !chat.answer || chat.answer === "[Tidak ada jawaban terdeteksi]"
+//                   ? "<i>No answer detected</i>"
+//                   : escapeHTML(chat.answer)
+//               }
+//             </div>
+//           </div>
+//         `;
+//       });
+//     });
+
+//     MySwal.fire({
+//       title: "Interview History",
+//       html: `
+//         <div style="max-height:500px; overflow:auto;">
+//           ${chatUI}
+//         </div>
+//       `,
+//       width: "60%",
+//       showCloseButton: true,
+//       showConfirmButton: false
+//     });
+
+//   } catch (error) {
+//     console.error(error);
+//     toast.error("There is no data interview history");
+//   }
+// };
+
+  
   const openInterviewHistory = async (candidateId: number, positionId: number) => {
-  try {
-    const res = await api.get(
-      `/candidates/interview/latest/${candidateId}/${positionId}`
-    );
+    try {
+      const res = await api.get(
+        `/candidates/interview/latest/${candidateId}/${positionId}`
+      );
 
-    console.log("RAW RESPONSE:", res.data);
+      console.log("RAW RESPONSE:", res.data);
 
-    const records = res.data?.messages || [];
+      // asumsi: res.data.messages = rows dari quick_call
+      const records = res.data?.messages || [];
 
-    if (!Array.isArray(records) || records.length === 0) {
-      toast.error("No interview history found");
-      return;
-    }
+      if (!Array.isArray(records) || records.length === 0) {
+        toast.error("No interview history found");
+        return;
+      }
 
-    const escapeHTML = (str: string) =>
-      str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+      const escapeHTML = (str: string) =>
+        str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
 
-    let chatUI = "";
+      let chatUI = "";
 
-    records.forEach((record: any) => {
-      if (!record.chat_history) return;
-
-      // 🔥 PARSE chat_history (STRING → ARRAY)
-      const chats = JSON.parse(record.chat_history);
-
-      chats.forEach((chat: any) => {
+      records.forEach((row: any) => {
         chatUI += `
           <!-- QUESTION -->
           <div style="text-align:left; margin:10px 0;">
@@ -490,8 +573,8 @@ const Candidates: React.FC = () => {
               max-width:70%;
               background:#f1f5f9;
             ">
-              <strong>Question:</strong><br/>
-              ${escapeHTML(chat.question || "-")}
+              <strong>Question ${row.quest_num}:</strong><br/>
+              ${escapeHTML(row.question || "-")}
             </div>
           </div>
 
@@ -507,35 +590,32 @@ const Candidates: React.FC = () => {
             ">
               <strong>Answer:</strong><br/>
               ${
-                !chat.answer || chat.answer === "[Tidak ada jawaban terdeteksi]"
+                !row.answer || row.answer === "[Tidak ada jawaban terdeteksi]"
                   ? "<i>No answer detected</i>"
-                  : escapeHTML(chat.answer)
+                  : escapeHTML(row.answer)
               }
             </div>
           </div>
         `;
       });
-    });
 
-    MySwal.fire({
-      title: "Interview History",
-      html: `
-        <div style="max-height:500px; overflow:auto;">
-          ${chatUI}
-        </div>
-      `,
-      width: "60%",
-      showCloseButton: true,
-      showConfirmButton: false
-    });
+      MySwal.fire({
+        title: "Interview History",
+        html: `
+          <div style="max-height:500px; overflow:auto;">
+            ${chatUI}
+          </div>
+        `,
+        width: "60%",
+        showCloseButton: true,
+        showConfirmButton: false
+      });
 
-  } catch (error) {
-    console.error(error);
-    toast.error("There is no data interview history");
-  }
-};
-
-
+    } catch (error) {
+      console.error(error);
+      toast.error("There is no data interview history");
+    }
+  };
 
 
   const statusOptions = React.useMemo(() => {

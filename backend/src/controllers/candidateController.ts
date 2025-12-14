@@ -706,7 +706,9 @@ export const getLatestInterviewHistory = async (req: Request, res: Response) => 
       SELECT 
         ih.candidate_id,
         ih.position_id,
-        ih.message AS chat_history,
+        ih.quest_num,
+        ih.question,
+        ih.answer,
         ih.created_date
       FROM quick_call ih
       JOIN latest_session ls ON ih.session_id = ls.session_id
