@@ -107,6 +107,10 @@ export const getDistinctPositions = async (req: Request, res: Response) => {
 };
 
 
+// ------------------------
+// TEMPLATE EMAIL //
+// ------------------------
+
 const sendRejectionEmail = async (
   email: string,
   name: string,
@@ -119,14 +123,6 @@ const sendRejectionEmail = async (
   }
   
   console.log("ENV:", process.env.SMTP_HOST, process.env.SMTP_USER);
-
- 
-  // try {
-  //   await transporter.verify();
-  // } catch (error) {
-  //   console.error('SMTP connection failed:', error);
-  //   throw new Error('Failed to connect to email server. Please check SMTP credentials.');
-  // }
 
   const mailOptions = {
     from: `"HR Team" <${process.env.SMTP_USER}>`,
@@ -195,17 +191,6 @@ const sendScheduleEmail = async (
     throw new Error('SMTP configuration is missing. Please check your .env file.');
   }
 
-  // const transporter = nodemailer.createTransport({
-  //   host: process.env.SMTP_HOST,
-  //   port: Number(process.env.SMTP_PORT),
-  //   secure: true,
-  //   auth: {
-  //     user: process.env.SMTP_USER,
-  //     pass: process.env.SMTP_PASS,
-  //   },
-  // });
-
-  // await transporter.verify();
 
   const ccManual = ["hrviewer8@gmail.com"];
   const ccList = [
@@ -369,28 +354,10 @@ export const sendPassedCandidateEmail = async (
   position: string,
   feedback: string    
 ) => {
-  // ✅ Validasi SMTP
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS || !process.env.SMTP_PORT) {
     throw new Error('SMTP configuration is missing. Please check your .env file.');
   }
 
-  // const transporter = nodemailer.createTransport({
-  //   host: process.env.SMTP_HOST,
-  //   port: Number(process.env.SMTP_PORT),
-  //   secure: true,
-  //   auth: {
-  //     user: process.env.SMTP_USER,
-  //     pass: process.env.SMTP_PASS,
-  //   },
-  // });
-
-  // try {
-  //   await transporter.verify();
-  //   console.log("SMTP Connected ✅");
-  // } catch (err) {
-  //   console.error("SMTP Verification Failed ❌", err);
-  //   throw err;
-  // }
 
   // CC manual
   const ccManual = ["hrviewer8@gmail.com"];
@@ -459,6 +426,127 @@ export const sendPassedCandidateEmail = async (
     throw err;
   }
 };
+
+const sendtechlink = async (
+  email: string,
+  name: string,
+  level: string,
+  position: string,
+  ccUser: string,
+  techLink : string,
+) => {
+  // Validate SMTP configuration
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    throw new Error('SMTP configuration is missing. Please check your .env file.');
+  }
+  
+  console.log("ENV:", process.env.SMTP_HOST, process.env.SMTP_USER);
+
+  const ccManual = ["hrviewer8@gmail.com"];
+  const ccList = [
+    ccUser,
+    ...ccManual
+  ].filter(Boolean);
+  
+
+  const mailOptions = {
+    from: `"HR Team" <${process.env.SMTP_USER}>`,
+    to: email,
+    cc: ccList.join(", "),
+    subject: `Application Status Update – ${level} ${position}`,
+    html: `
+      <div style="background-color: #f3f4f6; padding: 40px 16px; font-family: 'Segoe UI', Arial, sans-serif;">
+        <div style="max-width: 640px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+          
+          <!-- Header / Logo -->
+          <div style="padding: 24px 32px; border-bottom: 1px solid #e5e7eb; text-align: center; background-color: #ffffff;">
+            <img src="cid:bithealthlogo" alt="BitHealth Logo" width="350" style="display:block; margin:0 auto;"/>
+          </div>
+
+           <!-- Content -->
+          <div style="padding:32px; color:#2b2b2b; line-height:1.7;">
+            <p>Dear <strong>${name}</strong>,</p>
+
+            <p style="font-weight:600; color:#065f46; margin-top:16px;">
+              🎉 We are pleased to inform you that you have successfully passed the initial screening stage.
+            </p>
+
+            <p>
+              As the next step in our recruitment process, we would like to invite you to complete a 
+              <strong>Technical Test</strong>.
+            </p>
+
+            <!-- Technical Test Box -->
+            <div style="
+              margin:24px 0;
+              padding:20px;
+              background-color:#f9fafb;
+              border-left:5px solid #16a34a;
+              border-radius:6px;
+            ">
+              <p style="margin:0 0 10px; font-weight:600; color:#1f2937;">
+                🔧 Technical Test Details
+              </p>
+
+              <p style="margin:0 0 12px;">
+                Please access the technical test using the link below:
+              </p>
+
+              <a href="${techLink}" 
+                target="_blank"
+                style="
+                  display:inline-block;
+                  padding:12px 20px;
+                  background-color:#16a34a;
+                  color:#ffffff;
+                  text-decoration:none;
+                  border-radius:6px;
+                  font-weight:600;
+                ">
+                Start Technical Test
+              </a>
+
+              <p style="margin-top:14px; font-size:14px; color:#6b7280;">
+                Please ensure the test is completed within the specified timeframe.
+              </p>
+            </div>
+
+            <p>
+              If you have any questions or encounter any issues accessing the test, 
+              please do not hesitate to contact us.
+            </p>
+
+            <p>
+              We appreciate your interest in joining BitHealth and wish you the very best of luck in this next stage.
+            </p>
+
+            <p style="margin-top:32px;">
+              Kind regards,<br/>
+              <strong>Human Resources Team</strong><br/>
+              <span style="color:#6b7280;">BitHealth</span>
+            </p>
+          </div>
+
+        </div>
+      </div>
+      `,
+    attachments: [
+      {
+        filename: 'logo_bithealth.png',
+        path: './logo_bithealth.png',
+        cid: 'bithealthlogo', 
+      },
+    ],
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
+
+
+// -------------------
+// UPDATE STATUS //
+// -------------------
 
 export const updateCandidateStatus = async (req: AuthRequest, res: Response) => {
   try {
@@ -621,7 +709,7 @@ export const getAllCandidatesUser = async (req: Request, res: Response): Promise
                      sc.soft_skill_score AS soft_score,
                      cp.cv_link,
                      sc.summary_desc AS summary,
-                     ps.technical_link AS tech_link,
+                     cp.technical_link AS tech_link,
                      to_char(su.schedule, 'YYYY-MM-DD"T"HH24:MI') AS schedule,
                      cp.submit_date,
                      cp.created_date,cp.updated_date
@@ -836,3 +924,66 @@ export const upsertSchedule = async (req: Request, res: Response): Promise<void>
   }
 };
 
+
+export const updateTechLink = async (req: AuthRequest, res: Response) => {
+  const candidateId = Number(req.params.id);
+  const { tech_link, position_id } = req.body;
+
+  if (!tech_link || !position_id) {
+    return res.status(400).json({
+      error: 'tech_link and position_id are required'
+    });
+  }
+
+  try {
+    const result = await pool.query(
+      `
+      UPDATE candidate_profile
+      SET technical_link = $1,
+          updated_date = NOW()
+      WHERE id = $2
+        AND position_id = $3
+      RETURNING *
+      `,
+      [tech_link, candidateId, position_id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        error: 'Candidate or position not found'
+      });
+    }
+
+    const candidateRes = await pool.query(
+        `SELECT cp.email, cp.name, ps.level, ps.position, cp.status, cp.technical_link
+        FROM candidate_profile cp
+        INNER JOIN positions ps ON cp.position_id = ps.id
+        WHERE cp.id = $1`,
+        [candidateId]
+      );
+
+    const candidate = candidateRes.rows[0];
+
+     sendtechlink(
+      candidate.email,
+      candidate.name,
+      candidate.level,
+      candidate.position,
+      req.user!.email,  
+      candidate.technical_link
+    ).catch(err => {
+      console.error('Failed to send technical test email:', err);
+    });
+
+    return res.json({
+      message: 'Technical link updated successfully',
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error('Update tech link error:', error);
+    return res.status(500).json({
+      error: 'Internal server error'
+    });
+  }
+};

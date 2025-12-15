@@ -7,6 +7,7 @@ import {
   getAllCandidatesUser,
   getLatestInterviewHistory ,
   upsertSchedule,
+  updateTechLink,
 } from '../controllers/candidateController';
 import { authenticateToken, authorizeRoles,verifyToken } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
@@ -22,6 +23,7 @@ router.put('/status/:id', authenticateToken, updateCandidateStatus);
 router.get('/user/getAll', authenticateToken, getAllCandidatesUser);
 router.get("/interview/latest/:candidate_id/:position_id",getLatestInterviewHistory);
 router.put('/schedule', verifyToken, authenticateToken, upsertSchedule);
+router.put('/:id/tech-link', verifyToken, authenticateToken,updateTechLink);
 
 
 

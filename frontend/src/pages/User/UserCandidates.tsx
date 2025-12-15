@@ -25,6 +25,12 @@ const Candidates: React.FC = () => {
   const [levels, setLevels] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
   const [startDate, endDate] = dateRange;
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [techLink, setTechLink] = useState('');
+  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
+
+
 
 
   
@@ -628,6 +634,40 @@ const Candidates: React.FC = () => {
     return (!startDate || submit >= startDate) && (!endDate || submit <= endDate);
   });
 
+  const openTechModal = (candidate: Candidate) => {
+    setSelectedCandidate(candidate);
+    setTechLink('');
+    setIsModalOpen(true);
+  };
+
+
+  const handleSendTechLink = async () => {
+    if (!selectedCandidate) return;
+
+    try {
+      await api.put(
+        `/candidates/${selectedCandidate.id}/tech-link`,
+        {
+          tech_link: techLink,
+          position_id: selectedCandidate.position_id
+        }
+      );
+
+      toast.success(`Technical link sent to ${selectedCandidate.name}`);
+
+      setIsConfirmOpen(false);
+      setIsModalOpen(false);
+      setSelectedCandidate(null);
+
+      fetchCandidates(true); // refresh table
+    } catch (error) {
+      toast.error('Failed to send technical link');
+    }
+  };
+
+
+
+
   return (
     <div className="space-y-6">
       {/* Filters */}
@@ -711,6 +751,81 @@ const Candidates: React.FC = () => {
         </div>
       </div>
 
+      {/* Input Tech Link*/}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <h2 className="text-lg font-semibold mb-4">
+              Send Technical Link
+            </h2>
+
+            <label className="block text-sm mb-2">
+              Please put your technical link here :
+            </label>
+            <input
+              type="url"
+              placeholder="https://..."
+              className="w-full border rounded px-3 py-2 mb-4"
+              value={techLink}
+              onChange={(e) => setTechLink(e.target.value)}
+            />
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 border rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (!techLink) return alert('Link wajib diisi');
+                  setIsModalOpen(false);
+                  setIsConfirmOpen(true);
+                }}
+                className="px-4 py-2 bg-primary-600 text-white rounded"
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Modal */}
+      {isConfirmOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <h2 className="text-lg font-semibold mb-4">
+              Confirmation
+            </h2>
+
+            <p className="text-sm mb-6">
+              Are you sure want to send technical link to{' '}
+              <span className="font-semibold">
+                {selectedCandidate?.name}
+              </span>
+              ?
+            </p>
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setIsConfirmOpen(false)}
+                className="px-4 py-2 border rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendTechLink}
+                className="px-4 py-2 bg-primary-600 text-white rounded"
+              >
+                Yes, Send
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Candidates Table */}
       <div className="bg-white/50 backdrop-blur-xl rounded-3xl shadow-lg p-8 border border-accent/30">
         {loading ? (
@@ -743,12 +858,6 @@ const Candidates: React.FC = () => {
                   <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Residence
                   </th>
-                  {/* <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
-                    Avg Score
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
-                    Tech Score
-                  </th> */}
                   <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     SoftSkill Score
                   </th>
@@ -809,12 +918,6 @@ const Candidates: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
                         {candidate.residence || 'Null'}
                       </td>
-                      {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
-                        {candidate.score || 0}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
-                        {candidate.tech_score || 0}
-                      </td> */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
                         {candidate.soft_score || 0}
                       </td>
@@ -830,7 +933,7 @@ const Candidates: React.FC = () => {
                             'No Summary'
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {/* <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {candidate.tech_link ? (
                             <a
                             href={candidate.tech_link}
@@ -843,6 +946,28 @@ const Candidates: React.FC = () => {
                         ) : (
                             'No Technical Link'
                         )}
+                    </td> */}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {candidate.tech_link ? (
+                        <a
+                          href={candidate.tech_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary-600 hover:text-primary-800 underline flex items-center gap-2"
+                        >
+                          <Eye size={16} /> View Technical
+                        </a>
+                      ) : (
+                        <button
+                          onClick={() => openTechModal(candidate)}
+                          className="flex items-center gap-2 px-3 py-1.5
+                                    bg-primary-600 text-white rounded-lg
+                                    hover:bg-primary-700 transition-all text-sm
+                                    font-['Inter'] font-medium"
+                        >
+                          Send Tech Link
+                        </button>
+                      )}
                     </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
