@@ -10,8 +10,8 @@ export const getOverviewMetrics = async (req: Request, res: Response): Promise<v
       SELECT 
         COUNT(*) AS total_candidates,
         COUNT(*) FILTER (WHERE a.status = 2) AS accepted_candidates,
-        COUNT(*) FILTER (WHERE a.status = 3) AS rejected_candidates,
-        COUNT(*) FILTER (WHERE a.status = 1) AS in_progress_candidates
+        COUNT(*) FILTER (WHERE a.status in (3,7)) AS rejected_candidates,
+        COUNT(*) FILTER (WHERE a.status in (1,5,6)) AS in_progress_candidates
       FROM candidate_profile a
       INNER JOIN positions p ON a.position_id = p.id
       WHERE ($1::text IS NULL OR p.position = $1)
@@ -38,11 +38,15 @@ export const getTopCandidatesToday = async (req: Request, res: Response) => {
       SELECT
             cp.id,
             c.name,
-            cp.email,
+            c.email,
             p.level,
             p.position AS job_role,
             s.status,
-            cp.soft_skill_score as score,
+            cp.curt,
+            cp.nervous,
+            cp.calmness,
+            cp.confident,
+            cp.enthusiast,
             s.status,
             c.submit_date,
             cp.updated_date AS last_action_date
@@ -54,12 +58,12 @@ export const getTopCandidatesToday = async (req: Request, res: Response) => {
         ON cp.position_id = p.id
       INNER JOIN status s
         ON c.status = s.id
-      WHERE c.status in (1,5)
+      WHERE c.status in (1,5,6)
         AND ($1::text IS NULL OR p.position = $1)
         AND ($2::text IS NULL OR p.level = $2)
         AND ($3::date IS NULL OR c.submit_date >= $3)
         AND ($4::date IS NULL OR c.submit_date <= $4)
-      ORDER BY cp.soft_skill_score DESC
+      ORDER BY c.status DESC
       LIMIT $5
       `,
       [job_role || null, level || null, start_date || null, end_date || null, limit]
@@ -82,8 +86,8 @@ export const getCandidatesByRole = async (req: Request, res: Response): Promise<
         p.position AS job_role,
         COUNT(*) AS total_candidates,
         COUNT(*) FILTER (WHERE a.status = 2) AS accepted,
-        COUNT(*) FILTER (WHERE a.status = 3) AS rejected,
-        COUNT(*) FILTER (WHERE a.Status = 1) AS in_progress
+        COUNT(*) FILTER (WHERE a.status in (3,7)) AS rejected,
+        COUNT(*) FILTER (WHERE a.Status in(1,5,6)) AS in_progress
       FROM candidate_profile a
       INNER JOIN positions p
         ON a.position_id = p.id
@@ -113,8 +117,8 @@ export const getApplicationTrends = async (req: Request, res: Response): Promise
         DATE(a.submit_date) AS date,
         COUNT(*) AS total_applications,
         COUNT(*) FILTER (WHERE a.status = 2) AS accepted,
-        COUNT(*) FILTER (WHERE a.status = 3) AS rejected,
-        COUNT(*) FILTER (WHERE a.status = 1) AS in_progress
+        COUNT(*) FILTER (WHERE a.status in (3,7)) AS rejected,
+        COUNT(*) FILTER (WHERE a.status in(1,5,6)) AS in_progress
       FROM candidate_profile a
       INNER JOIN positions p ON a.position_id = p.id
       WHERE 
@@ -155,8 +159,8 @@ export const getMetricsUser = async (req: Request, res: Response): Promise<void>
       SELECT 
         COUNT(*) AS total_candidates,
         COUNT(*) FILTER (WHERE a.status = 2) AS accepted_candidates,
-        COUNT(*) FILTER (WHERE a.status = 3) AS rejected_candidates,
-        COUNT(*) FILTER (WHERE a.status = 1) AS in_progress_candidates
+        COUNT(*) FILTER (WHERE a.status in (3,7)) AS rejected_candidates,
+        COUNT(*) FILTER (WHERE a.status in(1,5,6)) AS in_progress_candidates
       FROM candidate_profile a
       INNER JOIN positions p ON a.position_id = p.id
       INNER JOIN users b 

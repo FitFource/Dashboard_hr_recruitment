@@ -585,9 +585,9 @@ const Dashboard: React.FC = () => {
                 <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                   Status
                 </th>
-                <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
+                {/* <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                   SoftSkill Score
-                </th>
+                </th> */}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-accent/20">
@@ -619,7 +619,7 @@ const Dashboard: React.FC = () => {
                         {candidate.status.replace('_', ' ')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    {/* <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div
                           className="flex-1 h-2.5 rounded-full mr-2 max-w-[60px] shadow-inner"
@@ -628,7 +628,6 @@ const Dashboard: React.FC = () => {
                           <div
                             className="h-2.5 rounded-full shadow-sm"
                             style={{
-                              // Convert score 1-5 to percentage (1 = 20%, 5 = 100%)
                               width: `${(candidate.score || 0) * 20}%`,
                               backgroundColor: '#547792',
                             }}
@@ -638,7 +637,7 @@ const Dashboard: React.FC = () => {
                           {candidate.score || 'N/A'}
                         </span>
                       </div>
-                    </td>
+                    </td> */}
 
                   </tr>
                 ))

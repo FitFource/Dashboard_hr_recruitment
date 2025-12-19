@@ -454,174 +454,138 @@ const Candidates: React.FC = () => {
       });
     };
 
-//   const openInterviewHistory = async (candidateId: number, positionId: number) => {
-//   try {
-//     const res = await api.get(
-//       `/candidates/interview/latest/${candidateId}/${positionId}`
-//     );
 
-//     console.log("RAW RESPONSE:", res.data);
-
-//     const records = res.data?.messages || [];
-
-//     if (!Array.isArray(records) || records.length === 0) {
-//       toast.error("No interview history found");
-//       return;
-//     }
-
-//     const escapeHTML = (str: string) =>
-//       str
-//         .replace(/&/g, "&amp;")
-//         .replace(/</g, "&lt;")
-//         .replace(/>/g, "&gt;")
-//         .replace(/"/g, "&quot;")
-//         .replace(/'/g, "&#039;");
-
-//     let chatUI = "";
-
-//     records.forEach((record: any) => {
-//       if (!record.chat_history) return;
-
-//       // 🔥 PARSE chat_history (STRING → ARRAY)
-//       const chats = JSON.parse(record.chat_history);
-
-//       chats.forEach((chat: any) => {
-//         chatUI += `
-//           <!-- QUESTION -->
-//           <div style="text-align:left; margin:10px 0;">
-//             <div style="
-//               display:inline-block;
-//               padding:10px 14px;
-//               border-radius:18px;
-//               max-width:70%;
-//               background:#f1f5f9;
-//             ">
-//               <strong>Question:</strong><br/>
-//               ${escapeHTML(chat.question || "-")}
-//             </div>
-//           </div>
-
-//           <!-- ANSWER -->
-//           <div style="text-align:right; margin:10px 0;">
-//             <div style="
-//               display:inline-block;
-//               padding:10px 14px;
-//               border-radius:18px;
-//               max-width:70%;
-//               background:#4f46e5;
-//               color:#fff;
-//             ">
-//               <strong>Answer:</strong><br/>
-//               ${
-//                 !chat.answer || chat.answer === "[Tidak ada jawaban terdeteksi]"
-//                   ? "<i>No answer detected</i>"
-//                   : escapeHTML(chat.answer)
-//               }
-//             </div>
-//           </div>
-//         `;
-//       });
-//     });
-
-//     MySwal.fire({
-//       title: "Interview History",
-//       html: `
-//         <div style="max-height:500px; overflow:auto;">
-//           ${chatUI}
-//         </div>
-//       `,
-//       width: "60%",
-//       showCloseButton: true,
-//       showConfirmButton: false
-//     });
-
-//   } catch (error) {
-//     console.error(error);
-//     toast.error("There is no data interview history");
-//   }
-// };
-
-  
   const openInterviewHistory = async (candidateId: number, positionId: number) => {
-    try {
-      const res = await api.get(
-        `/candidates/interview/latest/${candidateId}/${positionId}`
-      );
+  // 🔹 1. SHOW LOADING MODAL FIRST
+  MySwal.fire({
+    title: "Interview History",
+    html: `
+      <div style="padding:40px; text-align:center;">
+        <div class="swal2-loader" style="margin:0 auto;"></div>
+        <p style="margin-top:16px; font-size:14px;">Loading interview history...</p>
+      </div>
+    `,
+    width: "60%",
+    showConfirmButton: false,
+    showCloseButton: false,
+    allowOutsideClick: false,
+    didOpen: () => Swal.showLoading()
+  });
 
-      console.log("RAW RESPONSE:", res.data);
+  try {
+    // 🔹 2. FETCH DATA
+    const res = await api.get(
+      `/candidates/interview/latest/${candidateId}/${positionId}`
+    );
 
-      // asumsi: res.data.messages = rows dari quick_call
-      const records = res.data?.messages || [];
+    const records = res.data?.messages || [];
 
-      if (!Array.isArray(records) || records.length === 0) {
-        toast.error("No interview history found");
-        return;
-      }
-
-      const escapeHTML = (str: string) =>
-        str
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
-
-      let chatUI = "";
-
-      records.forEach((row: any) => {
-        chatUI += `
-          <!-- QUESTION -->
-          <div style="text-align:left; margin:10px 0;">
-            <div style="
-              display:inline-block;
-              padding:10px 14px;
-              border-radius:18px;
-              max-width:70%;
-              background:#f1f5f9;
-            ">
-              <strong>Question ${row.quest_num}:</strong><br/>
-              ${escapeHTML(row.question || "-")}
-            </div>
-          </div>
-
-          <!-- ANSWER -->
-          <div style="text-align:right; margin:10px 0;">
-            <div style="
-              display:inline-block;
-              padding:10px 14px;
-              border-radius:18px;
-              max-width:70%;
-              background:#4f46e5;
-              color:#fff;
-            ">
-              <strong>Answer:</strong><br/>
-              ${
-                !row.answer || row.answer === "[Tidak ada jawaban terdeteksi]"
-                  ? "<i>No answer detected</i>"
-                  : escapeHTML(row.answer)
-              }
-            </div>
-          </div>
-        `;
-      });
-
-      MySwal.fire({
-        title: "Interview History",
-        html: `
-          <div style="max-height:500px; overflow:auto;">
-            ${chatUI}
-          </div>
-        `,
-        width: "60%",
-        showCloseButton: true,
-        showConfirmButton: false
-      });
-
-    } catch (error) {
-      console.error(error);
-      toast.error("There is no data interview history");
+    if (!Array.isArray(records) || records.length === 0) {
+      MySwal.close();
+      toast.error("No interview history found");
+      return;
     }
-  };
+
+    const escapeHTML = (str: string) =>
+      str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+    const createAudioURL = (binary: any) => {
+      if (!binary) return null;
+
+      try {
+        const byteArray = new Uint8Array(binary.data || binary);
+        const blob = new Blob([byteArray], { type: "audio/webm" });
+        return URL.createObjectURL(blob);
+      } catch (err) {
+        console.error("Failed to create audio URL", err);
+        return null;
+      }
+    };
+
+    // 🔹 3. BUILD UI
+    let chatUI = "";
+
+    records.forEach((row: any) => {
+      const audioUrl = row.audio_content
+        ? createAudioURL(row.audio_content)
+        : null;
+
+      chatUI += `
+        <!-- QUESTION -->
+        <div style="text-align:left; margin:10px 0;">
+          <div style="
+            display:inline-block;
+            padding:10px 14px;
+            border-radius:18px;
+            max-width:70%;
+            background:#f1f5f9;
+          ">
+            <strong>Question ${row.quest_num}:</strong><br/>
+            ${escapeHTML(row.question || "-")}
+          </div>
+        </div>
+
+        <!-- ANSWER -->
+        <div style="text-align:right; margin:12px 0;">
+          ${
+            audioUrl
+              ? `
+                <div style="margin-bottom:6px;">
+                  <audio controls style="
+                    display:inline-block;
+                    width:70%;
+                    border-radius:10px;
+                  ">
+                    <source src="${audioUrl}" type="audio/webm" />
+                  </audio>
+                </div>
+              `
+              : ""
+          }
+
+          <div style="
+            display:inline-block;
+            padding:12px 14px;
+            border-radius:18px;
+            max-width:70%;
+            background:#4f46e5;
+            color:#ffffff;
+          ">
+            <strong>Answer:</strong><br/>
+            ${
+              !row.answer ||
+              row.answer === "[Tidak ada jawaban terdeteksi]"
+                ? "<i>No answer detected</i>"
+                : escapeHTML(row.answer)
+            }
+          </div>
+        </div>
+      `;
+    });
+
+    // 🔹 4. UPDATE MODAL CONTENT
+    MySwal.update({
+      html: `
+        <div style="max-height:500px; overflow:auto;">
+          ${chatUI}
+        </div>
+      `,
+      showCloseButton: true,
+      allowOutsideClick: true
+    });
+
+  } catch (error) {
+    console.error(error);
+    MySwal.close();
+    toast.error("There is no data interview history");
+  }
+};
+
 
 
   const statusOptions = React.useMemo(() => {
@@ -666,6 +630,32 @@ const Candidates: React.FC = () => {
   };
 
 
+
+  const openSummaryModal = (text: string) => {
+    const formattedText = text
+      .split('\n')
+      .map(line => `<p style="margin-bottom:12px;">${line}</p>`)
+      .join('');
+
+    MySwal.fire({
+      title: "AI Summary",
+      html: `
+        <div style="
+          text-align: justify;
+          line-height: 1.6;
+          font-size: 14px;
+          max-height: 60vh;
+          overflow-y: auto;
+          padding-right: 6px;
+        ">
+          ${formattedText}
+        </div>
+      `,
+      width: "60%",
+      showCloseButton: true,
+      showConfirmButton: false
+    });
+  };
 
 
   return (
@@ -853,13 +843,25 @@ const Candidates: React.FC = () => {
                     Job Role
                   </th>
                   <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
-                    CV Link
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Residence
                   </th>
                   <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
-                    SoftSkill Score
+                    CV Link
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
+                    Curt Score
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
+                    Nervous Score
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
+                    Calmmness Score
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
+                    Confident Score
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
+                    Enthusiast Score
                   </th>
                   <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Summary AI
@@ -903,11 +905,17 @@ const Candidates: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
                         {candidate.position || 'Null'}
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
+                        {candidate.residence || 'Null'}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {candidate.cv_link ? (
                             <button
                             onClick={() => openCVPreview(candidate.cv_link)}
-                            className="flex items-center gap-2 text-primary-600 hover:text-primary-800 underline"
+                            className="flex items-center gap-2
+                              text-primary-600 hover:text-primary-800
+                              hover:underline font-medium
+                              whitespace-nowrap underline"
                             >
                             <Eye size={16}/> View CV
                             </button>
@@ -916,44 +924,61 @@ const Candidates: React.FC = () => {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
-                        {candidate.residence || 'Null'}
+                         {candidate.curt
+                          ? `${candidate.curt.toFixed(2)}%`
+                          : '0%'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
-                        {candidate.soft_score || 0}
+                        {candidate.nervous
+                          ? `${candidate.nervous.toFixed(2)}%`
+                          : '0%'}
                       </td>
-                      <td className="px-6 py-4 text-sm text-primary-900 max-w-xs">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
+                        {candidate.calmness 
+                          ? `${candidate.calmness.toFixed(2)}%`
+                          : '0%'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
+                        {candidate.confident
+                          ? `${candidate.confident.toFixed(2)}%`
+                          : '0%'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
+                        {candidate.enthusiast
+                          ? `${candidate.enthusiast.toFixed(2)}%`
+                          : '0%'}
+                      </td>
+
+                      <td className="px-6 py-4 text-sm text-primary-900">
                         {candidate.summary ? (
-                            <button
+                          <button
                             onClick={() => openSummaryModal(candidate.summary)}
-                            className="text-left line-clamp-3 hover:underline hover:text-primary-600"
-                            >
-                            {candidate.summary}
-                            </button>
+                            className="
+                              flex items-center gap-2
+                              text-primary-600 hover:text-primary-800
+                              hover:underline font-medium
+                              whitespace-nowrap underline
+                            "
+                          >
+                            <Eye size={16} /> View Summary
+                          </button>
                         ) : (
-                            'No Summary'
+                          <span className="text-primary-900/50 italic">
+                            No Summary
+                          </span>
                         )}
                       </td>
-                      {/* <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {candidate.tech_link ? (
-                            <a
-                            href={candidate.tech_link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary-600 hover:text-primary-800 underline flex items-center gap-2"
-                            >
-                            <Eye size={16} /> View Technical
-                            </a>
-                        ) : (
-                            'No Technical Link'
-                        )}
-                    </td> */}
+
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {candidate.tech_link ? (
                         <a
                           href={candidate.tech_link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-primary-600 hover:text-primary-800 underline flex items-center gap-2"
+                          className="flex items-center gap-2
+                              text-primary-600 hover:text-primary-800
+                              hover:underline font-medium
+                              whitespace-nowrap underline"
                         >
                           <Eye size={16} /> View Technical
                         </a>
@@ -1017,10 +1042,13 @@ const Candidates: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <button
                             onClick={() => openInterviewHistory(candidate.id, candidate.position_id)}
-                            className="flex items-center gap-2 text-primary-600 hover:text-primary-800 underline"
+                            className="flex items-center gap-2
+                              text-primary-600 hover:text-primary-800
+                              hover:underline font-medium
+                              whitespace-nowrap underline"
                         >
                             <Eye size={16} />
-                            View
+                            View History
                         </button>
                     </td>
 
@@ -1043,5 +1071,6 @@ const Candidates: React.FC = () => {
 };
 
 export default Candidates;
+
 
 

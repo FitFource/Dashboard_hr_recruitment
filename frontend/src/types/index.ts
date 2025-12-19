@@ -17,13 +17,18 @@ export interface Candidate {
   residence: string;
   status_id: number;
   status_label:string;
-  soft_score:number,
+  curt: number;
+  nervous: number;
+  calmness: number;
+  confident: number;
+  enthusiast: number;
   cv_link: string;
   summary: string;
   tech_link: string;
   position_id:number;
   schedule: string;
   submit_date: String;
+  phone_number:number;
   created_date: string;
   updated_date: string;
 }

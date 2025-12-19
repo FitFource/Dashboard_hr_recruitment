@@ -74,7 +74,7 @@ const HomeUser: React.FC = () => {
     );
   }
 
-  const total = stats.total_candidates ?? 0;
+  const total = stats?.totalCandidates ?? 0;
   const acceptedTrend = total
     ? (((stats.acceptedCandidates ?? 0) / total) * 100).toFixed(1)
     : "0";
@@ -156,7 +156,7 @@ const HomeUser: React.FC = () => {
         <div className="bg-gradient-to-br from-white to-red-50 rounded-3xl shadow-lg border border-red-200/40 p-6 hover:shadow-xl hover:scale-[1.02] transition-all duration-300">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="text-xs text-primary-900/70 uppercase tracking-wide">
+              <p className="text-x  s text-primary-900/70 uppercase tracking-wide">
                 Rejected
               </p>
               <h3 className="text-4xl font-bold text-primary-900 mt-2">

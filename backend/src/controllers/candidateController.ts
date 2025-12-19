@@ -23,14 +23,20 @@ export const getAllCandidates = async (req: Request, res: Response): Promise<voi
     const { status, position, search, level,limit = '50', offset = '0' } = req.query;
 
     let query = `
-              SELECT cp.id,cp.name,ps.level,ps.position,
+              SELECT cp.id,cp.name,ps.level,ps.position,cp.position_id,
                      cp.email,cp.residence,
                      cp.status AS status_id,
                      st.status AS status_label,
                      cp.cv_link,
-                     s.schedule,
-                     sc.soft_skill_score as soft_score,
+                    to_char(s.schedule, 'YYYY-MM-DD"T"HH24:MI') AS schedule,
+                     sc.curt,
+                     sc.nervous,
+                     sc.calmness,
+                     sc.confident,
+                     sc.enthusiast,
+                     cp.technical_link as tech_link,
                      sc.summary_desc as summary,
+                     cp.phone_number,
                      cp.created_date,cp.updated_date
               FROM candidate_profile cp
               INNER JOIN status st 
@@ -258,8 +264,17 @@ const sendScheduleEmail = async (
 
             <p style="margin-top: 16px; font-size: 16px;">
               Please ensure your availability at the scheduled time.  
-              Should you need to reschedule, kindly notify us as soon as possible.
+              Should you need to reschedule, kindly notify us as soon as possible.<br>
+              📱WhatsApp:
+            <a
+              href="https://wa.me/625117700307"
+              target="_blank"
+              style="color:#25D366; text-decoration: underline; font-weight: 500;"
+            >
+              0812-3456-7890
+            </a>
             </p>
+
 
             <p style="margin-top: 24px; font-size: 16px;">
               We look forward to speaking with you.<br/><br/>
@@ -314,7 +329,15 @@ const sendScheduleEmail = async (
             </div>
 
             <p style="margin-top: 16px; font-size: 16px;">
-              Please ensure your availability at the scheduled time. If you need to reschedule, kindly notify us as soon as possible.
+              Please ensure your availability at the scheduled time. If you need to reschedule, kindly notify us as soon as possible. <br>
+              📱WhatsApp:
+            <a
+              href="https://wa.me/625117700307"
+              target="_blank"
+              style="color:#25D366; text-decoration: underline; font-weight: 500;"
+            >
+              0812-3456-7890
+            </a>
             </p>
 
             <p style="margin-top: 24px; font-size: 16px;">
@@ -343,7 +366,9 @@ const sendScheduleEmail = async (
       },
     ],
   };
+
   await transporter.sendMail(mailOptions);
+
 };
 
 export const sendPassedCandidateEmail = async (
@@ -544,6 +569,169 @@ const sendtechlink = async (
 
 
 
+const sendCandidateReopenedEmail = async (
+  email: string,
+  name: string,
+  level: string,
+  position: string,
+  ccUser: string,
+  nameuser :string,
+) => {
+  // Validate SMTP configuration
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    throw new Error('SMTP configuration is missing. Please check your .env file.');
+  }
+  
+  console.log("ENV:", process.env.SMTP_HOST, process.env.SMTP_USER);
+
+  const ccManual = ["hrviewer8@gmail.com"];
+  const ccList = [
+    ...ccManual
+  ].filter(Boolean);
+  
+
+  const mailOptions = {
+    from: `"HR Team" <${process.env.SMTP_USER}>`,
+    to: ccUser,
+    cc: ccList.join(", "),
+    subject: `Re-Open Candidate Application– ${level} ${position}`,
+    html: `
+      <div style="background-color: #f3f4f6; padding: 40px 16px; font-family: 'Segoe UI', Arial, sans-serif;">
+        <div style="max-width: 640px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+          
+          <!-- Header / Logo -->
+          <div style="padding: 24px 32px; border-bottom: 1px solid #e5e7eb; text-align: center; background-color: #ffffff;">
+            <img src="cid:bithealthlogo" alt="BitHealth Logo" width="350" style="display:block; margin:0 auto;"/>
+          </div>
+
+           <!-- Content -->
+          <div style="padding:32px; color:#2b2b2b; line-height:1.7;">
+            <p>Dear Mr/Mrs <strong>${nameuser}</strong>,</p>
+
+            <p style="font-weight:600; color:#065f46; margin-top:16px;">
+              🔄 We would like to inform you that the candidate <strong>${name}</strong> for the position 
+              <strong>${level} ${position}</strong> has been <strong>Re-Opened</strong> in our recruitment system.
+            </p>
+
+            <p style="margin-top:14px; font-size:14px; color:#4b5563;">
+              This update indicates that the candidate is once again eligible to continue in the recruitment process. 
+              The re-opening has been made following an internal review and is intended to allow further evaluation 
+              and consideration based on current recruitment needs.
+            </p>
+
+            <p style="margin-top:14px; font-size:14px; color:#4b5563;">
+              We kindly request you to review the candidate’s profile and previous assessment results in the system. 
+              If deemed appropriate, please proceed with the next steps, such as scheduling an assessment, test, 
+              or interview session, in accordance with the standard recruitment workflow.
+            </p>
+
+            <p style="margin-top:14px; font-size:14px; color:#6b7280;">
+              Should you require any additional information or clarification regarding this update, 
+              please do not hesitate to reach out to the Human Resources team.
+            </p>
+
+
+            <p style="margin-top:32px;">
+              Kind regards,<br/>
+              <strong>Human Resources Team</strong><br/>
+              <span style="color:#6b7280;">BitHealth</span>
+            </p>
+          </div>
+
+        </div>
+      </div>
+      `,
+    attachments: [
+      {
+        filename: 'logo_bithealth.png',
+        path: './logo_bithealth.png',
+        cid: 'bithealthlogo', 
+      },
+    ],
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
+
+const sendWithdrawEmail = async (
+  email: string,
+  name: string,
+  level: string,
+  position: string,
+  ccUser: string,
+  nameuser :string,
+) => {
+  // Validate SMTP configuration
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    throw new Error('SMTP configuration is missing. Please check your .env file.');
+  }
+  
+  console.log("ENV:", process.env.SMTP_HOST, process.env.SMTP_USER);
+
+  const ccManual = ["hrviewer8@gmail.com"];
+  const ccList = [
+    ...ccManual
+  ].filter(Boolean);
+  
+
+  const mailOptions = {
+    from: `"HR Team" <${process.env.SMTP_USER}>`,
+    to: ccUser,
+    cc: ccList.join(", "),
+    subject: `Candidate Withdrawal Status – ${level} ${position}`,
+    html: `
+      <div style="background-color: #f3f4f6; padding: 40px 16px; font-family: 'Segoe UI', Arial, sans-serif;">
+        <div style="max-width: 640px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden;">
+          
+          <!-- Header / Logo -->
+          <div style="padding: 24px 32px; border-bottom: 1px solid #e5e7eb; text-align: center; background-color: #ffffff;">
+            <img src="cid:bithealthlogo" alt="BitHealth Logo" width="350" style="display:block; margin:0 auto;"/>
+          </div>
+
+           <!-- Content -->
+          <div style="padding:32px; color:#2b2b2b; line-height:1.7;">
+            <p>Dear Mr/Mrs <strong>${nameuser}</strong>,</p>
+
+            <p style="font-weight:600; color:#7c2d12; margin-top:16px;">
+              ⚠️ We would like to inform you that the candidate <strong>${name}</strong> 
+              for the position <strong>${level} ${position}</strong> has decided to 
+              <strong>withdraw from the recruitment process</strong>.
+            </p>
+
+            <p style="margin-top:14px; font-size:14px; color:#6b7280;">
+              As a result, the candidate will no longer proceed to the next stages of the selection process. 
+              This decision was made by the candidate due to personal considerations, and we respect their choice.
+            </p>
+
+            <p style="margin-top:14px; font-size:14px; color:#6b7280;">
+              Kindly update your records accordingly and feel free to proceed with other candidates 
+              who are currently under evaluation for this position.
+            </p>
+
+            <p style="margin-top:32px;">
+              Kind regards,<br/>
+              <strong>Human Resources Team</strong><br/>
+              <span style="color:#6b7280;">BitHealth</span>
+            </p>
+          </div>
+
+        </div>
+      </div>
+      `,
+    attachments: [
+      {
+        filename: 'logo_bithealth.png',
+        path: './logo_bithealth.png',
+        cid: 'bithealthlogo', 
+      },
+    ],
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
+
 // -------------------
 // UPDATE STATUS //
 // -------------------
@@ -552,13 +740,15 @@ export const updateCandidateStatus = async (req: AuthRequest, res: Response) => 
   try {
     const { id } = req.params;
     const { newStatus,feedback } = req.body; // expected integer 2 | 3
-    const newStatusNum = Number(newStatus);
+    // const newStatusNum = Number(newStatus);
+    const newStatusNumOriginal = Number(newStatus);
+    let newStatusNum = newStatusNumOriginal;
 
-    // Get current candidate info
     const result = await pool.query(
-      `SELECT cp.status, cp.email, cp.name, ps.level, ps.position
+      `SELECT cp.status, cp.email, cp.name, ps.level, ps.position, u.email as ccUser, u.name as nameuser
        FROM candidate_profile cp
        INNER JOIN positions ps ON cp.position_id = ps.id
+       Left join users u ON u.position_name = ps.position AND u.position_id > ps.id
        WHERE cp.id = $1`,
       [id]
     );
@@ -575,12 +765,64 @@ export const updateCandidateStatus = async (req: AuthRequest, res: Response) => 
     }
 
     const candidate = result.rows[0];
+    if (newStatusNum === 6) {
+      try {
+        sendPassedCandidateEmail(
+          "hrviewer8@gmail.com",
+          req.user!.email,
+          candidate.name,
+          candidate.level,
+          candidate.position,
+          feedback
+          
+        );
+        console.log(`📨 Schedule email sent to ${candidate.email}`);
+      } catch (emailError: any) {
+        console.error("❌ Failed to send schedule email:", emailError.message);
+      }
+    }
+
+    if ([3, 7].includes(Number(candidate.status)) && Number(newStatus) === 0){
+      const historyRes = await pool.query(
+        `SELECT 
+           CASE 
+             WHEN su.schedule IS NULL THEN 1
+             WHEN su.schedule IS NOT NULL THEN 6
+           END AS previous_status
+         FROM candidate_profile cp
+         LEFT JOIN schedule_user_interview su 
+           ON su.candidate_id = cp.id
+           AND su.position_id = cp.position_id
+         WHERE cp.id = $1`,
+        [id]
+      );
+
+      newStatusNum = historyRes.rows[0]?.previous_status ?? 1; // 
+   
+
+      // kirim email Re-Open jika perlu
+      try {
+        sendCandidateReopenedEmail(
+          candidate.email,
+          candidate.name,
+          candidate.level,
+          candidate.position,
+          candidate.ccuser,
+          candidate.nameuser
+        );
+      } catch (emailError: any) {
+        console.error("❌ Failed to send reopened email:", emailError.message);
+      }
+    }
+
 
     if (
       !(
-        (candidate.status == 1 && [2, 3, 5].includes(newStatusNum)) ||
-        (candidate.status == 5 && [3, 6].includes(newStatusNum)) ||
-        (candidate.status == 6 && [3, 2].includes(newStatusNum))
+        (candidate.status == 1 && [2, 3, 5,7].includes(newStatusNum)) ||
+        (candidate.status == 5 && [3, 6,7].includes(newStatusNum)) ||
+        (candidate.status == 6 && [3, 2,7].includes(newStatusNum)) ||
+        (candidate.status == 3 && [1,6].includes(newStatusNum)) ||
+        (candidate.status == 7 && [1,6].includes(newStatusNum))
       )
     ) {
       return res.status(400).json({
@@ -588,7 +830,7 @@ export const updateCandidateStatus = async (req: AuthRequest, res: Response) => 
       });
     }
 
-    if (![2, 3, 5, 6].includes(newStatusNum)) {
+    if (![2, 3, 5, 6, 1,7].includes(newStatusNum)) {
       return res.status(400).json({ error: "Invalid status. Must be 2 (Accepted) or 3 (Rejected)" });
     }
 
@@ -662,26 +904,24 @@ export const updateCandidateStatus = async (req: AuthRequest, res: Response) => 
       }
     }
 
-
-    if (newStatusNum === 6) {
+    if (newStatusNum === 7) {
       try {
-        sendPassedCandidateEmail(
-          "hrviewer8@gmail.com",
-          req.user!.email,
+        sendWithdrawEmail(
+          candidate.email,
           candidate.name,
           candidate.level,
           candidate.position,
-          feedback
-          
+          candidate.ccuser,
+          candidate.nameuser
         );
-        console.log(`📨 Schedule email sent to ${candidate.email}`);
+        console.log(`📨  email sent to ${candidate.ccuser}`);
       } catch (emailError: any) {
-        console.error("❌ Failed to send schedule email:", emailError.message);
+        console.error("❌ Failed to send withdraw email:", emailError.message);
       }
     }
 
 
-
+    
     res.json({
       candidate: updateResult.rows[0],
       message: "Candidate status updated successfully"
@@ -706,7 +946,11 @@ export const getAllCandidatesUser = async (req: Request, res: Response): Promise
                      cp.email,cp.residence,
                      cp.status AS status_id,
                      st.status AS status_label,
-                     sc.soft_skill_score AS soft_score,
+                     sc.curt,
+                     sc.nervous,
+                     sc.calmness,
+                     sc.confident,
+                     sc.enthusiast,
                      cp.cv_link,
                      sc.summary_desc AS summary,
                      cp.technical_link AS tech_link,
@@ -797,6 +1041,7 @@ export const getLatestInterviewHistory = async (req: Request, res: Response) => 
         ih.quest_num,
         ih.question,
         ih.answer,
+        ih.audio_content,
         ih.created_date
       FROM quick_call ih
       JOIN latest_session ls ON ih.session_id = ls.session_id
@@ -868,9 +1113,10 @@ export const upsertSchedule = async (req: Request, res: Response): Promise<void>
       ]);
 
       const candidateRes = await pool.query(
-        `SELECT cp.email, cp.name, ps.level, ps.position, cp.status
+        `SELECT cp.email, cp.name, ps.level, ps.position, cp.status,u.email as ccUser
         FROM candidate_profile cp
         INNER JOIN positions ps ON cp.position_id = ps.id
+        INNER JOIN users u ON ps.position = u.position_name AND ps.id < u.position_id
         WHERE cp.id = $1`,
         [candidate_id]
       );
@@ -883,7 +1129,7 @@ export const upsertSchedule = async (req: Request, res: Response): Promise<void>
           candidate.level,
           candidate.position,
           schedule,
-          userEmail,
+          candidate.ccuser,
           "update"
         );
         console.log(`📨 Schedule email sent to ${candidate.email}`);
