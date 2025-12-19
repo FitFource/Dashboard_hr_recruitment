@@ -70,7 +70,7 @@ const Login: React.FC = () => {
           </div>
 
           <h1 className="text-3xl font-bold text-primary-900 tracking-tight">LOGIN</h1>
-          <p className="text-primary-900/70 mt-2">HR Recruitment Dashboard</p>
+          <p className="text-primary-900/70 mt-2">RecruitMate AI</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
