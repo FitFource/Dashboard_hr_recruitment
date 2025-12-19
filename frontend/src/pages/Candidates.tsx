@@ -643,6 +643,9 @@ const Candidates: React.FC = () => {
                     Enthusiast Score
                   </th>
                   <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
+                    Tech Knowledge Score
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
                     Summary AI
                   </th>
                   <th className="px-6 py-4 text-left text-xs text-background uppercase tracking-wide">
@@ -728,6 +731,11 @@ const Candidates: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
                         {candidate.enthusiast
                           ? `${candidate.enthusiast.toFixed(2)}%`
+                          : '0%'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-primary-900">
+                        {candidate.technical_knowledge
+                          ? `${candidate.technical_knowledge.toFixed(2)}%`
                           : '0%'}
                       </td>
                       <td className="px-6 py-4 text-sm text-primary-900">

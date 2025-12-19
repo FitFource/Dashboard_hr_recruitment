@@ -22,6 +22,7 @@ export interface Candidate {
   calmness: number;
   confident: number;
   enthusiast: number;
+  technical_knowledge:number;
   cv_link: string;
   summary: string;
   tech_link: string;
