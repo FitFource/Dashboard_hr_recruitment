@@ -50,7 +50,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
             <h1 className="text-xl font-bold tracking-tight">
-              HR Recruitment Dashboard
+              HR Management Portal
             </h1>
           </div>
           <div className="flex items-center gap-3">
