@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
-import { Users, Briefcase, TrendingUp, Award,UserCheck,UserX,Clock  } from 'lucide-react';
+import { Users,UserCheck,UserX,Clock  } from 'lucide-react';
 import api from '../../lib/api';
 import toast from 'react-hot-toast';
 import {DashboardStats} from '../../types';
@@ -47,24 +47,24 @@ const HomeUser: React.FC = () => {
     }
 };
 
-  const StatCard: React.FC<{
-    title: string;
-    value: number;
-    icon: React.ReactNode;
-    color: string;
-  }> = ({ title, value, icon, color }) => (
-    <div className={`bg-white/95 backdrop-blur-xl rounded-3xl shadow-lg p-6 border border-${color}/30 hover:shadow-xl transition-all`}>
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-primary-900/70 text-sm mb-1">{title}</p>
-          <p className="text-3xl font-bold text-primary-900">{value}</p>
-        </div>
-        <div className={`w-14 h-14 bg-gradient-to-br from-${color} to-${color}/70 rounded-2xl flex items-center justify-center shadow-md`}>
-          {icon}
-        </div>
-      </div>
-    </div>
-  );
+  // const StatCard: React.FC<{
+  //   title: string;
+  //   value: number;
+  //   icon: React.ReactNode;
+  //   color: string;
+  // }> = ({ title, value, icon, color }) => (
+  //   <div className={`bg-white/95 backdrop-blur-xl rounded-3xl shadow-lg p-6 border border-${color}/30 hover:shadow-xl transition-all`}>
+  //     <div className="flex items-center justify-between">
+  //       <div>
+  //         <p className="text-primary-900/70 text-sm mb-1">{title}</p>
+  //         <p className="text-3xl font-bold text-primary-900">{value}</p>
+  //       </div>
+  //       <div className={`w-14 h-14 bg-gradient-to-br from-${color} to-${color}/70 rounded-2xl flex items-center justify-center shadow-md`}>
+  //         {icon}
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
 
   if (loading) {
     return (
@@ -74,18 +74,25 @@ const HomeUser: React.FC = () => {
     );
   }
 
-  const total = stats?.totalCandidates ?? 0;
+  if (!stats) {
+    return null; // or loading skeleton
+  }
+
+
+  const total = stats.totalCandidates;
+
   const acceptedTrend = total
-    ? (((stats.acceptedCandidates ?? 0) / total) * 100).toFixed(1)
+    ? ((stats.acceptedCandidates / total) * 100).toFixed(1)
     : "0";
 
   const rejectedTrend = total
-    ? (((stats.rejectedCandidates ?? 0) / total) * 100).toFixed(1)
+    ? ((stats.rejectedCandidates / total) * 100).toFixed(1)
     : "0";
 
   const processedTrend = total
-    ? (((stats.inProgressCandidates ?? 0) / total) * 100).toFixed(1)
+    ? ((stats.inProgressCandidates / total) * 100).toFixed(1)
     : "0";
+
 
   return (
     <div className="space-y-6">
@@ -210,7 +217,7 @@ const HomeUser: React.FC = () => {
       {nextInterview && nextInterview.length > 0 ? (
         <div className="space-y-6">
 
-          {nextInterview.map((item, idx) => (
+          {nextInterview.map((item: { candidate_name: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; interview_time: string | number | Date; position_name: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; level: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | null | undefined; meeting_link: string | undefined; }, idx: React.Key | null | undefined) => (
             <div
               key={idx}
               className={

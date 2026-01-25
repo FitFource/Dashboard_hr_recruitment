@@ -29,7 +29,7 @@ export interface Candidate {
   position_id:number;
   schedule: string;
   submit_date: String;
-  phone_number:number;
+  phone_number:string;
   created_date: string;
   updated_date: string;
 }
@@ -78,10 +78,22 @@ export interface CandidatesByRole {
   in_progress: number;
 }
 
+export interface TopPosition {
+  positionName: string;
+  total: number;
+}
 
 
-interface DashboardStats {
-    total_candidates: number;
+export interface DashboardStats {
+  totalCandidates: number;
+  acceptedCandidates: number;
+  rejectedCandidates: number;
+  inProgressCandidates: number;
+  topPositions: TopPosition[];
+}
+
+export interface DashboardStatsApi {
+  total_candidates: number;
   accepted_candidates: number;
   rejected_candidates: number;
   in_progress_candidates: number;

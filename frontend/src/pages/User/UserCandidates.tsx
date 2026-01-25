@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Search, Plus, Eye } from 'lucide-react';
+import { Search, Eye } from 'lucide-react';
 import api from '../../lib/api';
 import toast from 'react-hot-toast';
 import { Candidate } from '../../types';
@@ -22,7 +21,7 @@ const Candidates: React.FC = () => {
   const { user } = useAuthStore();
   const [positions, setPositions] = useState<string[]>([]);
   const [levelFilter, setLevelFilter] = useState('');
-  const [levels, setLevels] = useState<string[]>([]);
+  const [levels, setLevels] = useState<string[] | unknown>([]);
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
   const [startDate, endDate] = dateRange;
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -58,7 +57,7 @@ const Candidates: React.FC = () => {
       const response = await api.get(`/candidates/user/getAll?${params.toString()}`);
       setCandidates(response.data.candidates);
 
-      const uniqueLevels = Array.from(new Set(response.data.candidates.map(c => c.level))).sort();
+      const uniqueLevels = Array.from(new Set(response.data.candidates.map((c: { level: any; }) => c.level))).sort();
       setLevels(uniqueLevels);
       
     } catch (error: any) {
@@ -305,7 +304,6 @@ const Candidates: React.FC = () => {
 
 
   const renderDropdown = (candidate: Candidate) => {
-    const hasSchedule = !!candidate.schedule;
     const status = Number(candidate.status_id);
 
     if (status === 1) {
