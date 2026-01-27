@@ -1,5 +1,4 @@
 import express from 'express';
-import { body } from 'express-validator';
 import {
   getAllCandidates,
   getDistinctPositions,
@@ -9,8 +8,7 @@ import {
   upsertSchedule,
   updateTechLink,
 } from '../controllers/candidateController';
-import { authenticateToken, authorizeRoles,verifyToken } from '../middleware/auth';
-import { validateRequest } from '../middleware/validation';
+import { authenticateToken,verifyToken } from '../middleware/auth';
 
 const router = express.Router();
 

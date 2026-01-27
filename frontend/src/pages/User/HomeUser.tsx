@@ -47,24 +47,6 @@ const HomeUser: React.FC = () => {
     }
 };
 
-  // const StatCard: React.FC<{
-  //   title: string;
-  //   value: number;
-  //   icon: React.ReactNode;
-  //   color: string;
-  // }> = ({ title, value, icon, color }) => (
-  //   <div className={`bg-white/95 backdrop-blur-xl rounded-3xl shadow-lg p-6 border border-${color}/30 hover:shadow-xl transition-all`}>
-  //     <div className="flex items-center justify-between">
-  //       <div>
-  //         <p className="text-primary-900/70 text-sm mb-1">{title}</p>
-  //         <p className="text-3xl font-bold text-primary-900">{value}</p>
-  //       </div>
-  //       <div className={`w-14 h-14 bg-gradient-to-br from-${color} to-${color}/70 rounded-2xl flex items-center justify-center shadow-md`}>
-  //         {icon}
-  //       </div>
-  //     </div>
-  //   </div>
-  // );
 
   if (loading) {
     return (
@@ -269,4 +251,5 @@ const HomeUser: React.FC = () => {
 };
 
 export default HomeUser;
+
 

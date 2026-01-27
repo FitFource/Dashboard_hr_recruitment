@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { Upload, Trash2, FileText } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { Upload } from 'lucide-react';
 import api from '../../lib/api';
 import toast from 'react-hot-toast';
 import { JobRequirement } from '../../types';
@@ -43,6 +43,7 @@ const Requirements: React.FC = () => {
     try {
       if (!silent) setLoading(true);
       const response = await api.get('/requirements/user/getAll');
+  
       setRequirements(response.data.requirements);
     } catch (error: any) {
       if (!silent) {

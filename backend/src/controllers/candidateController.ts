@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import pool from '../database/connection';
-import { Candidate} from '../types';
 import { AuthRequest } from '../middleware/auth';
 import nodemailer from 'nodemailer';
 
@@ -940,6 +939,7 @@ export const updateCandidateStatus = async (req: AuthRequest, res: Response) => 
 export const getAllCandidatesUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { status, position, search, level,limit = '50', offset = '0' } = req.query;
+    const user_id = (req as any).user?.id;
 
     let query = `
               SELECT cp.id,cp.name,ps.level,ps.position,
@@ -973,10 +973,10 @@ export const getAllCandidatesUser = async (req: Request, res: Response): Promise
               LEFT JOIN schedule_user_interview su
                 ON cp.id = su.candidate_id
                 AND cp.position_id = su.position_id
-              WHERE 1=1
+              WHERE u.id=$1
             `;
-    const params: any[] = [];
-    let paramCount = 1;
+    const params: any[] = [user_id];
+    let paramCount = 2;
 
     if (status) {
       query += ` AND st.status = $${paramCount}`;

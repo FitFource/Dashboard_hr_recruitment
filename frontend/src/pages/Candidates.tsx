@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Search, Plus, Eye } from 'lucide-react';
+import { Search, Eye } from 'lucide-react';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
 import { Candidate } from '../types';
@@ -138,7 +137,7 @@ const Candidates: React.FC = () => {
         title: `Are you sure?`,
         html: `
           <p>Do you really want to <strong>${actionText}</strong> this candidate?</p>
-          ${value === 3 ? `<p class="mt-2 text-sm text-gray-600">📧 A rejection email will be sent to <strong>${candidate.email}</strong></p>` : ''}
+          ${emailNotice ? `<p class="mt-2 text-sm text-gray-600">${emailNotice}</p>` : ''}
         `,
         icon: 'warning',
         showCancelButton: true,

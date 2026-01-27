@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Users, UserCheck, UserX, Clock, AreaChart as AreaChartIcon} from 'lucide-react';
+import { Users, UserCheck, UserX, Clock } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -22,7 +22,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 
-const COLORS = ['#88B494', '#B5D8BF', '#F4A896', '#ef4444'];
+
 
 const Dashboard: React.FC = () => {
   const [overview, setOverview] = useState<MetricsOverview | null>(null);

@@ -10,8 +10,11 @@ const pool = new Pool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   max: 20,
-  idleTimeoutMillis: 60000,
-  connectionTimeoutMillis: 2000,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
+  query_timeout: 30000,
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10000,
 });
 
 pool.on('connect', () => {

@@ -4,7 +4,7 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'HR Recruitment Dashboard',
+      title: 'RecruitMate AI',
       version: '1.0.0',
       description: 'An intelligent recruitment management that enables candidate tracking, workflow automation, and insight-driven hiring analytics',
       contact: {

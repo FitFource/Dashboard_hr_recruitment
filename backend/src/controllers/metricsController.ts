@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import pool from '../database/connection';
-import { MetricsOverview, TopCandidate, CandidatesByRole } from '../types';
 
 export const getOverviewMetrics = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -154,6 +153,7 @@ export const getLevels = async (req: Request, res: Response) => {
 export const getMetricsUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { job_role, level, start_date, end_date } = req.query;
+    const userID = (req as any).user?.id;
 
     const result = await pool.query(`
       SELECT 
@@ -166,11 +166,12 @@ export const getMetricsUser = async (req: Request, res: Response): Promise<void>
       INNER JOIN users b 
         ON p.position = b.position_name 
         AND p.id < b.position_id
+        AND b.id = $5
       WHERE ($1::text IS NULL OR p.position = $1)
         AND ($2::text IS NULL OR p.level = $2)
         AND ($3::date IS NULL OR a.submit_date >= $3)
         AND ($4::date IS NULL OR a.submit_date <= $4)
-    `, [job_role || null, level || null, start_date || null, end_date || null]);
+    `, [job_role || null, level || null, start_date || null, end_date || null, userID]);
 
     res.json(result.rows[0]);
   } catch (error) {

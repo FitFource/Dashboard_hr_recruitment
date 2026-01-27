@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Upload, Plus, Trash2, FileText } from 'lucide-react';
+import { Upload} from 'lucide-react';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
 import { InterviewQuestion } from '../types';

@@ -3,9 +3,6 @@ import { Request, Response } from 'express';
 import pool from '../database/connection';
 import { JobRequirement } from '../types';
 import { AuthRequest } from '../middleware/auth';
-import csvParser from 'csv-parser';
-import xlsx from 'xlsx';
-import fs from 'fs';
 import { spawn } from "child_process";
 
 
@@ -286,6 +283,9 @@ export const getPositionsList = async (req: Request, res: Response) => {
 // -----------------------------------------------------------
 
 export const getAllRequirementsUser = async (req: Request, res: Response): Promise<void> => {
+  const user_id = (req as any).user.id;
+
+
   try {
     const { position } = req.query;
 
@@ -300,11 +300,12 @@ export const getAllRequirementsUser = async (req: Request, res: Response): Promi
               INNER JOIN users b 
                 ON a.position_name = b.position_name 
                 AND a.position_id < b.position_id
+                AND b.id = $1
               WHERE 1 = 1
               `;
 
-    const params: any[] = [];
-    let idx = 1;
+    const params: any[] = [user_id];
+    let idx = 2;
 
     if (position) {
       query += ` AND a.position_name ILIKE $${idx}`;

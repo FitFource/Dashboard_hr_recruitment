@@ -21,7 +21,7 @@ const Candidates: React.FC = () => {
   const { user } = useAuthStore();
   const [positions, setPositions] = useState<string[]>([]);
   const [levelFilter, setLevelFilter] = useState('');
-  const [levels, setLevels] = useState<string[] | unknown>([]);
+  const [levels, setLevels] = useState<string[]>([]);
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
   const [startDate, endDate] = dateRange;
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -57,7 +57,9 @@ const Candidates: React.FC = () => {
       const response = await api.get(`/candidates/user/getAll?${params.toString()}`);
       setCandidates(response.data.candidates);
 
-      const uniqueLevels = Array.from(new Set(response.data.candidates.map((c: { level: any; }) => c.level))).sort();
+      const uniqueLevels = Array.from(
+        new Set(response.data.candidates.map((c: Candidate) => c.level))
+      ).sort() as string[];
       setLevels(uniqueLevels);
       
     } catch (error: any) {
@@ -699,6 +701,20 @@ const Candidates: React.FC = () => {
               {levels.map((lvl) => (
                 <option key={lvl} value={lvl}>
                   {lvl}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="w-48">
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="w-full px-4 py-3 border border-accent/60 rounded-2xl focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 transition-all text-primary-900 hover:border-accent shadow-sm"
+            >
+              <option value="">All Positions</option>
+              {positions.map((pos) => (
+                <option key={pos} value={pos}>
+                  {pos}
                 </option>
               ))}
             </select>

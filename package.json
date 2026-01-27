@@ -12,5 +12,8 @@
     "react-datepicker": "^9.0.0",
     "sweetalert2": "^11.26.3",
     "sweetalert2-react-content": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.10"
   }
 }

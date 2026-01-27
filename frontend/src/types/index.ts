@@ -28,7 +28,7 @@ export interface Candidate {
   tech_link: string;
   position_id:number;
   schedule: string;
-  submit_date: String;
+  submit_date: string;  // Fixed: Changed from String to string (primitive type)
   phone_number:string;
   created_date: string;
   updated_date: string;

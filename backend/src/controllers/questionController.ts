@@ -5,9 +5,6 @@ import { Request, Response } from 'express';
 import pool from '../database/connection';
 import { InterviewQuestion } from '../types';
 import { AuthRequest } from '../middleware/auth';
-import csvParser from 'csv-parser';
-import xlsx from 'xlsx';
-import fs from 'fs';
 import { spawn } from 'child_process';
 
 // ---------------------------------------------------------------------------

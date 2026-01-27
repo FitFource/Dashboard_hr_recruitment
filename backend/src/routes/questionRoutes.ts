@@ -1,6 +1,4 @@
 import express from 'express';
-import multer from 'multer';
-import { body } from 'express-validator';
 import {
   getAllQuestions,
   createQuestion,
@@ -9,7 +7,6 @@ import {
   getPositionsList,
 } from '../controllers/questionController';
 import { authenticateToken, authorizeRoles } from '../middleware/auth';
-import { validateRequest } from '../middleware/validation';
 
 const router = express.Router();
 
